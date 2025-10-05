@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.db
+*.sqlite3
+*.log
+.venv/
+venv/
+.parsing_cache/
+
+# Парсер-специфика
+.env
+.env.*
+*.xlsx
+*.csv
+*.xls
+
+# IDE
+.idea/
+.vscode/
+*.swp
