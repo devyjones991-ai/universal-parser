@@ -1,0 +1,50 @@
+{
+  "webscraper_test": {
+    "name": "WebScraper Test Site",
+    "url": "https://webscraper.io/test-sites/e-commerce/static/computers/laptops",
+    "method": "html",
+    "selectors": {
+      "items": ".thumbnail",
+      "name": ".caption h4 a",
+      "price": ".caption .pull-right.price",
+      "link": ".caption h4 a"
+    },
+    "attributes": {
+      "link": "href"
+    }
+  },
+  "wildberries_search": {
+    "name": "Wildberries Search",
+    "url": "https://search.wb.ru/exactmatch/ru/common/v4/search",
+    "method": "api",
+    "params": {
+      "appType": "1",
+      "curr": "rub",
+      "dest": "-1257786",
+      "query": "{search_term}",
+      "resultset": "catalog",
+      "sort": "popular",
+      "spp": "27",
+      "suppressSpellcheck": "false"
+    },
+    "data_path": "data.products",
+    "fields": {
+      "name": "name",
+      "price": "priceU",
+      "rating": "reviewRating",
+      "id": "id"
+    }
+  },
+  "avito_contacts": {
+    "name": "Avito Business Contacts",
+    "url": "https://www.avito.ru/rossiya/kommercheskaya_nedvizhimost",
+    "method": "html_dynamic",
+    "selectors": {
+      "items": "[data-marker='item']",
+      "title": "[data-marker='item-title']",
+      "price": "[data-marker='item-price']",
+      "location": "[data-marker='item-address']"
+    },
+    "use_browser": true
+  }
+}
