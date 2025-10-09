@@ -3,10 +3,10 @@ import time
 from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime
 from sqlalchemy.orm import declarative_base, sessionmaker
 from config import settings
-from datetime import datetime
+from datetime import datetime, timezone
 
 engine = create_engine(settings.DATABASE_URL, future=True)
-SessionLocal = sessionmaker(bind=engine)
+SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 Base = declarative_base()
 
 class ParseResult(Base):
@@ -15,7 +15,7 @@ class ParseResult(Base):
     profile_name = Column(String, nullable=False)
     data_json = Column(Text, nullable=False)
     count = Column(Integer, default=0)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 def init_db():
     Base.metadata.create_all(engine)
@@ -28,7 +28,7 @@ def save_results(profile_name: str, results):
             profile_name=profile_name,
             data_json=json.dumps(results, ensure_ascii=False),
             count=len(results),
-            timestamp=datetime.utcnow()
+            timestamp=datetime.now(timezone.utc)
         )
         session.add(pr)
         session.commit()
