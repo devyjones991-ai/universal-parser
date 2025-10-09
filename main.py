@@ -1,8 +1,13 @@
+"""Точка входа приложения."""
 import asyncio
-from tg_commands import start_bot
+
+from bot import start_bot
+
+
+def main() -> None:
+    print("🚦 Universal Parser стартует...")
+    asyncio.run(start_bot())
+
 
 if __name__ == "__main__":
-    # Можно добавить логи, интеграции, автозапуск задач
-    print("🚦 Universal Parser стартует...")
-    # Просто запускаем Telegram-бот
-    asyncio.run(start_bot())
+    main()
