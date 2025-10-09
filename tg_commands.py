@@ -4,17 +4,45 @@ import io
 import pandas as pd
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
-from aiogram.types import BufferedInputFile
+from aiogram.types import BufferedInputFile, InlineKeyboardButton, InlineKeyboardMarkup
+
+from alerts.checker import AlertChecker
+from alerts.service import AlertNotFoundError, AlertService, AlertServiceError
 from config import settings, parsing_profiles
 from parser import UniversalParser
 from db import save_results, get_recent_results
 
 bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
 dp = Dispatcher()
+alert_service = AlertService()
+alert_checker = AlertChecker(bot=bot, service=alert_service)
 
 # Проверка доступа
 def is_admin(user_id: int) -> bool:
     return user_id == settings.TELEGRAM_CHAT_ID or user_id in settings.ADMIN_CHAT_IDS
+
+
+def build_alert_keyboard(alert_id: int) -> InlineKeyboardMarkup:
+    """Клавиатура с быстрыми действиями для алертов."""
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🔕 Отписаться", callback_data=f"alert:pause:{alert_id}"
+                ),
+                InlineKeyboardButton(
+                    text="▶️ Повторный запуск",
+                    callback_data=f"alert:resume:{alert_id}",
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🗑️ Удалить", callback_data=f"alert:delete:{alert_id}"
+                )
+            ],
+        ]
+    )
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
@@ -29,23 +57,144 @@ async def cmd_start(message: types.Message):
         "/parse <url> - парсить URL\n"
         "/run <profile> - запустить профиль\n"
         "/results - последние результаты\n"
-        "/export - экспорт в Excel/CSV"
+        "/export - экспорт в Excel/CSV\n"
+        "/alert_add <sku> <условие> <порог> - создать алерт\n"
+        "/alert_list - список алертов\n"
+        "/alert_delete <id> - удалить алерт\n"
+        "/alert_pause <id> [resume] - пауза или запуск"
     )
 
 @dp.message(Command("profiles"))
 async def cmd_profiles(message: types.Message):
     if not is_admin(message.from_user.id):
         return
-    
+
     if not parsing_profiles:
         await message.reply("❌ Профили не настроены")
         return
-    
+
     text = "📋 Доступные профили:\n\n"
     for key, profile in parsing_profiles.items():
         text += f"🔸 `{key}` - {profile['name']}\n"
-    
+
     await message.reply(text, parse_mode="Markdown")
+
+
+@dp.message(Command("alert_add"))
+async def cmd_alert_add(message: types.Message):
+    if not is_admin(message.from_user.id):
+        return
+
+    parts = message.text.split()
+    if len(parts) < 4:
+        await message.reply("❌ Использование: /alert_add <sku> <условие> <порог>")
+        return
+
+    sku = parts[1]
+    condition_type = parts[2]
+    threshold_raw = parts[3]
+
+    try:
+        threshold = float(threshold_raw.replace(",", "."))
+    except ValueError:
+        await message.reply("❌ Порог должен быть числом")
+        return
+
+    alert = await alert_service.add_alert(
+        message.from_user.id, sku, condition_type, threshold
+    )
+
+    await message.reply(
+        "✅ Алерт создан\n"
+        f"ID: {alert.id}\n"
+        f"SKU: {alert.sku}\n"
+        f"Условие: {condition_type} {threshold}"
+    )
+
+
+@dp.message(Command("alert_list"))
+async def cmd_alert_list(message: types.Message):
+    if not is_admin(message.from_user.id):
+        return
+
+    alerts = await alert_service.list_alerts(message.from_user.id)
+
+    if not alerts:
+        await message.reply("ℹ️ У вас нет настроенных алертов")
+        return
+
+    lines = ["📬 Ваши алерты:"]
+    for alert in alerts:
+        status = "активен" if alert.is_active else "на паузе"
+        last_value = (
+            f", последнее значение: {alert.last_value:.2f}"
+            if alert.last_value is not None
+            else ""
+        )
+        lines.append(
+            f"#{alert.id}: SKU {alert.sku} — {alert.condition_type} {alert.threshold:.2f} ({status}{last_value})"
+        )
+
+    await message.reply("\n".join(lines))
+
+
+@dp.message(Command("alert_delete"))
+async def cmd_alert_delete(message: types.Message):
+    if not is_admin(message.from_user.id):
+        return
+
+    parts = message.text.split()
+    if len(parts) < 2:
+        await message.reply("❌ Использование: /alert_delete <id>")
+        return
+
+    try:
+        alert_id = int(parts[1])
+    except ValueError:
+        await message.reply("❌ ID должен быть числом")
+        return
+
+    try:
+        await alert_service.delete_alert(message.from_user.id, alert_id)
+    except AlertNotFoundError:
+        await message.reply("❌ Алерт не найден")
+        return
+    except AlertServiceError as error:
+        await message.reply(f"❌ {error}")
+        return
+
+    await message.reply(f"🗑️ Алерт #{alert_id} удалён")
+
+
+@dp.message(Command("alert_pause"))
+async def cmd_alert_pause(message: types.Message):
+    if not is_admin(message.from_user.id):
+        return
+
+    parts = message.text.split()
+    if len(parts) < 2:
+        await message.reply("❌ Использование: /alert_pause <id> [resume]")
+        return
+
+    try:
+        alert_id = int(parts[1])
+    except ValueError:
+        await message.reply("❌ ID должен быть числом")
+        return
+
+    action = parts[2].lower() if len(parts) > 2 else "pause"
+
+    try:
+        if action in {"resume", "start", "run", "on"}:
+            alert = await alert_service.resume_alert(message.from_user.id, alert_id)
+            await message.reply(f"▶️ Алерт #{alert.id} снова активен")
+        else:
+            alert = await alert_service.pause_alert(message.from_user.id, alert_id)
+            await message.reply(f"⏸️ Алерт #{alert.id} поставлен на паузу")
+    except AlertNotFoundError:
+        await message.reply("❌ Алерт не найден")
+    except AlertServiceError as error:
+        await message.reply(f"❌ {error}")
 
 @dp.message(Command("parse"))
 async def cmd_parse(message: types.Message):
@@ -146,7 +295,7 @@ async def cmd_results(message: types.Message):
 async def cmd_export(message: types.Message):
     if not is_admin(message.from_user.id):
         return
-    
+
     results = get_recent_results(limit=1000)
     
     if not results:
@@ -165,9 +314,55 @@ async def cmd_export(message: types.Message):
     file = BufferedInputFile(buffer.read(), filename="parsing_results.xlsx")
     await message.reply_document(file, caption=f"📈 Экспорт: {len(results)} записей")
 
+
+@dp.callback_query(F.data.startswith("alert:"))
+async def alert_callback_handler(callback: types.CallbackQuery):
+    if not is_admin(callback.from_user.id):
+        await callback.answer("Нет доступа", show_alert=True)
+        return
+
+    parts = callback.data.split(":")
+    if len(parts) != 3:
+        await callback.answer("Некорректный запрос", show_alert=True)
+        return
+
+    _, action, alert_id_raw = parts
+
+    try:
+        alert_id = int(alert_id_raw)
+    except ValueError:
+        await callback.answer("Некорректный ID", show_alert=True)
+        return
+
+    try:
+        if action == "pause":
+            await alert_service.pause_alert(callback.from_user.id, alert_id)
+            await callback.answer("Алерт приостановлен")
+        elif action == "resume":
+            await alert_service.resume_alert(callback.from_user.id, alert_id)
+            await callback.answer("Алерт запущен")
+        elif action == "delete":
+            await alert_service.delete_alert(callback.from_user.id, alert_id)
+            await callback.answer("Алерт удалён")
+            await callback.message.edit_reply_markup(reply_markup=None)
+            return
+        else:
+            await callback.answer("Неизвестное действие", show_alert=True)
+            return
+    except AlertServiceError as error:
+        await callback.answer(str(error), show_alert=True)
+        return
+
+    keyboard = build_alert_keyboard(alert_id)
+    await callback.message.edit_reply_markup(reply_markup=keyboard)
+
 async def start_bot():
     print("🤖 Telegram бот запущен!")
-    await dp.start_polling(bot)
+    alert_checker.start()
+    try:
+        await dp.start_polling(bot)
+    finally:
+        await alert_checker.shutdown()
 
 if __name__ == "__main__":
     asyncio.run(start_bot())

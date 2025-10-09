@@ -6,7 +6,7 @@ from config import settings
 from datetime import datetime
 
 engine = create_engine(settings.DATABASE_URL, future=True)
-SessionLocal = sessionmaker(bind=engine)
+SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 Base = declarative_base()
 
 class ParseResult(Base):
@@ -18,6 +18,11 @@ class ParseResult(Base):
     timestamp = Column(DateTime, default=datetime.utcnow)
 
 def init_db():
+    """Инициализация всех таблиц проекта."""
+
+    # Импортируем модели, чтобы SQLAlchemy знала о них перед созданием таблиц
+    import profiles.models  # noqa: F401
+
     Base.metadata.create_all(engine)
 
 def save_results(profile_name: str, results):
