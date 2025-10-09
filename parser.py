@@ -113,6 +113,30 @@ class UniversalParser:
         
         return results
     
+    async def scrape_public_catalog(
+        self,
+        url: str,
+        *,
+        item_selector: str,
+        field_selectors: Dict[str, str],
+        attributes: Optional[Dict[str, str]] = None,
+        params: Optional[Dict[str, Any]] = None,
+        limit: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        """Парсит произвольный публичный каталог по CSS-селекторам."""
+
+        response = await self.session.get(url, params=params)
+        response.raise_for_status()
+        data = parse_catalog_html(
+            response.text,
+            item_selector=item_selector,
+            field_selectors=field_selectors,
+            attributes=attributes,
+        )
+        if limit is not None:
+            return data[:limit]
+        return data
+
     async def _parse_dynamic(self, profile: Dict, **kwargs) -> List[Dict]:
         """Парсинг динамического контента через браузер"""
         playwright = await async_playwright().start()
@@ -188,3 +212,33 @@ class UniversalParser:
 
 # Глобальный экземпляр для использования в боте
 parser_instance = UniversalParser()
+
+
+def parse_catalog_html(
+    html: str,
+    *,
+    item_selector: str,
+    field_selectors: Dict[str, str],
+    attributes: Optional[Dict[str, str]] = None,
+) -> List[Dict[str, Any]]:
+    """Парсит HTML-каталог по CSS-селекторам."""
+
+    soup = BeautifulSoup(html, "lxml")
+    items = soup.select(item_selector)
+    results: List[Dict[str, Any]] = []
+    attrs = attributes or {}
+
+    for item in items:
+        record: Dict[str, Any] = {}
+        for field, selector in field_selectors.items():
+            element = item.select_one(selector)
+            if element is None:
+                continue
+            attribute_name = attrs.get(field)
+            if attribute_name:
+                record[field] = element.get(attribute_name)
+            else:
+                record[field] = element.get_text(strip=True)
+        if record:
+            results.append(record)
+    return results
