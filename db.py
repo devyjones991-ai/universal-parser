@@ -18,6 +18,9 @@ class ParseResult(Base):
     timestamp = Column(DateTime, default=datetime.utcnow)
 
 def init_db():
+    # Импортируем модели советов, чтобы они зарегистрировались в metadata
+    from profiles import models  # noqa: F401
+
     Base.metadata.create_all(engine)
 
 def save_results(profile_name: str, results):
