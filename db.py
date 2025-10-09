@@ -1,13 +1,9 @@
 import json
-import time
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime
-from sqlalchemy.orm import declarative_base, sessionmaker
-from config import settings
 from datetime import datetime
 
-engine = create_engine(settings.DATABASE_URL, future=True)
-SessionLocal = sessionmaker(bind=engine)
-Base = declarative_base()
+from sqlalchemy import Column, DateTime, Integer, String, Text
+
+from database import Base, SessionLocal, engine
 
 class ParseResult(Base):
     __tablename__ = "parse_results"
@@ -18,6 +14,9 @@ class ParseResult(Base):
     timestamp = Column(DateTime, default=datetime.utcnow)
 
 def init_db():
+    # Импортируем модели для регистрации метаданных
+    from profiles import models  # noqa: F401
+
     Base.metadata.create_all(engine)
 
 def save_results(profile_name: str, results):
