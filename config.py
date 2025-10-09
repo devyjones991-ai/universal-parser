@@ -20,6 +20,13 @@ class Settings(BaseSettings):
     # Настройки экспорта
     EXPORT_FORMAT: str = "json"  # json, csv, xlsx
     MAX_RESULTS_PER_MESSAGE: int = 50
+
+    # Аналитика и ИИ подсказки
+    ANALYTICS_DEFAULT_PERIOD: str = "7d"
+    OPENAI_API_KEY: str = ""
+    OPENAI_MODEL: str = "gpt-3.5-turbo"
+    MISTRAL_API_KEY: str = ""
+    MISTRAL_MODEL: str = "mistral-small"
     
     class Config:
         env_file = ".env"
