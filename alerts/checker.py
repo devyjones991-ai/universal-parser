@@ -1,21 +1,40 @@
 """Проверка внешних источников и формирование дайджестов."""
 from __future__ import annotations
 
-from typing import Dict, Iterable, List, Optional
+import asyncio
+from collections import defaultdict
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
+from aiogram import Bot
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
+from alerts.service import AlertService, AlertServiceError
 from integrations.directories import DirectorySyncService
 from integrations.news import NewsIntegration
+from profiles.models import Alert
+from profiles.monitoring import MonitoringStorage, UserTrackedItem
+from parser import UniversalParser
 
 
 class AlertChecker:
-    """Сборщик данных для алертов и дайджестов."""
+    """Периодическая проверка активных алертов с интеграцией новостей и справочников."""
 
     def __init__(
         self,
+        bot: Bot,
+        service: Optional[AlertService] = None,
+        parser_factory: Callable[[], UniversalParser] = UniversalParser,
         *,
+        scheduler: Optional[AsyncIOScheduler] = None,
         news_integration: Optional[NewsIntegration] = None,
         directory_service: Optional[DirectorySyncService] = None,
     ) -> None:
+        self.bot = bot
+        self.service = service or AlertService()
+        self.parser_factory = parser_factory
+        self.scheduler = scheduler
         self.news_integration = news_integration or NewsIntegration()
         self.directory_service = directory_service or DirectorySyncService()
 
