@@ -29,6 +29,17 @@ from config import parsing_profiles, settings
 from db import get_recent_results, save_results
 from navigator import build_help_section
 from parser import UniversalParser
+from db import save_results, get_recent_results
+from profiles.monitoring import MonitoringStorage, UserTrackedItem
+from profiles.import_export import (
+    export_items,
+    import_items_from_clipboard,
+    import_items_from_file,
+)
+
+bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
+dp = Dispatcher()
+monitoring_storage = MonitoringStorage()
 
 router = Router(name="main")
 
@@ -37,6 +48,29 @@ def is_admin(user_id: int) -> bool:
     return user_id == settings.TELEGRAM_CHAT_ID or user_id in settings.ADMIN_CHAT_IDS
 
 
+def _parse_sources(raw_sources: str) -> list[str]:
+    return [s.strip() for s in raw_sources.split(",") if s.strip()]
+
+
+def _parse_monitor_payload(raw: str) -> UserTrackedItem:
+    parts = [part.strip() for part in raw.split("|")]
+    if len(parts) < 2:
+        raise ValueError("Ожидается минимум два поля: профиль|запрос|[SKU]|[название]|[источники]")
+    profile, query = parts[0], parts[1]
+    sku = parts[2] or None if len(parts) > 2 else None
+    title = parts[3] or None if len(parts) > 3 else None
+    sources = _parse_sources(parts[4]) if len(parts) > 4 else []
+    return UserTrackedItem(
+        user_id=0,
+        profile=profile,
+        query=query,
+        sku=sku,
+        title=title,
+        sources=sources,
+    )
+
+@dp.message(Command("start"))
+async def cmd_start(message: types.Message):
 async def ensure_admin_message(message: Message) -> bool:
     if not is_admin(message.from_user.id):
         await message.answer("❌ Доступ запрещён")
