@@ -1,0 +1,31 @@
+# Telegram Bot Configuration
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+TELEGRAM_CHAT_ID=your_chat_id
+ADMIN_CHAT_IDS=[123456789, 987654321]
+
+# Database Configuration
+DATABASE_URL=sqlite:///universal_parser.db
+
+# Parsing Settings
+DEFAULT_TIMEOUT=15
+MAX_CONCURRENT_REQUESTS=10
+USE_PROXY=false
+PROXY_URL=
+
+# Export Settings
+EXPORT_FORMAT=json
+MAX_RESULTS_PER_MESSAGE=50
+
+# Monitoring Settings
+UPDATE_INTERVAL_MINUTES=30
+ALERT_CHECK_INTERVAL_MINUTES=15
+
+# Subscription Settings
+FREE_ITEMS_LIMIT=3
+FREE_ALERTS_LIMIT=5
+PREMIUM_PRICE=990
+ENTERPRISE_PRICE=2990
+
+# External APIs (optional)
+OPENAI_API_KEY=your_openai_key_here
+YANDEX_API_KEY=your_yandex_key_here

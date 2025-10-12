@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  universal-parser:
+    build: .
+    container_name: universal-parser
+    restart: unless-stopped
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - DATABASE_URL=sqlite:///app/data/universal_parser.db
+      - DEFAULT_TIMEOUT=15
+      - MAX_CONCURRENT_REQUESTS=10
+    volumes:
+      - ./data:/app/data
+      - ./profiles:/app/profiles
+      - ./logs:/app/logs
+    networks:
+      - parser-network
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    container_name: universal-parser-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - parser-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: universal-parser-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    networks:
+      - parser-network
+    depends_on:
+      - universal-parser
+
+volumes:
+  redis_data:
+
+networks:
+  parser-network:
+    driver: bridge
