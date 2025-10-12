@@ -3,12 +3,20 @@ from __future__ import annotations
 
 import asyncio
 import io
+from typing import Any, Dict, List, Optional
 import json
 from typing import Iterable, List
 
 import pandas as pd
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
+from aiogram.types import (
+    BufferedInputFile,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+)
+from urllib.parse import quote_plus, unquote_plus
+
 from aiogram.types import BufferedInputFile, InlineKeyboardButton, InlineKeyboardMarkup
 
 from alerts.checker import AlertChecker
@@ -37,12 +45,9 @@ from db import get_recent_results, save_results
 from navigator import build_help_section
 from parser import UniversalParser
 from db import save_results, get_recent_results
-from profiles.monitoring import MonitoringStorage, UserTrackedItem
-from profiles.import_export import (
-    export_items,
-    import_items_from_clipboard,
-    import_items_from_file,
-)
+from navigator.suppliers import search_suppliers, OPEN_CATALOGS
+from navigator.guides import get_section, get_paginated_faq
+from navigator.logistics import Carrier, find_carriers, initialise_storage
 
 bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
 dp = Dispatcher()
@@ -53,50 +58,209 @@ monitoring_storage = MonitoringStorage()
 router = Router(name="main")
 
 
+SUPPLIERS_PAGE_SIZE = 5
+LOGISTICS_PAGE_SIZE = 5
+FAQ_PAGE_SIZE = 2
+
+
+# Проверка доступа
 def is_admin(user_id: int) -> bool:
     return user_id == settings.TELEGRAM_CHAT_ID or user_id in settings.ADMIN_CHAT_IDS
 
 
-def build_alert_keyboard(alert_id: int) -> InlineKeyboardMarkup:
-    """Клавиатура с быстрыми действиями для алертов."""
-
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="🔕 Отписаться", callback_data=f"alert:pause:{alert_id}"
-                ),
-                InlineKeyboardButton(
-                    text="▶️ Повторный запуск",
-                    callback_data=f"alert:resume:{alert_id}",
-                ),
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🗑️ Удалить", callback_data=f"alert:delete:{alert_id}"
-                )
-            ],
-        ]
-def _parse_sources(raw_sources: str) -> list[str]:
-    return [s.strip() for s in raw_sources.split(",") if s.strip()]
+def _make_callback(prefix: str, page: int, *parts: str) -> str:
+    encoded = [quote_plus(str(page))]
+    encoded.extend(quote_plus(part or "") for part in parts)
+    return "|".join([prefix, *encoded])
 
 
-def _parse_monitor_payload(raw: str) -> UserTrackedItem:
-    parts = [part.strip() for part in raw.split("|")]
+def _parse_callback(data: str) -> tuple[str, int, list[str]]:
+    parts = data.split("|")
+    prefix = parts[0]
     if len(parts) < 2:
-        raise ValueError("Ожидается минимум два поля: профиль|запрос|[SKU]|[название]|[источники]")
-    profile, query = parts[0], parts[1]
-    sku = parts[2] or None if len(parts) > 2 else None
-    title = parts[3] or None if len(parts) > 3 else None
-    sources = _parse_sources(parts[4]) if len(parts) > 4 else []
-    return UserTrackedItem(
-        user_id=0,
-        profile=profile,
+        return prefix, 1, []
+    page = int(unquote_plus(parts[1])) if parts[1] else 1
+    payload = [unquote_plus(part) for part in parts[2:]] if len(parts) > 2 else []
+    return prefix, max(1, page), payload
+
+
+def _build_pagination_keyboard(
+    prefix: str, page: int, has_prev: bool, has_next: bool, payload: list[str]
+) -> Optional[InlineKeyboardMarkup]:
+    buttons = []
+    if has_prev:
+        buttons.append(
+            InlineKeyboardButton(
+                text="⬅️ Назад",
+                callback_data=_make_callback(prefix, page - 1, *payload),
+            )
+        )
+    if has_next:
+        buttons.append(
+            InlineKeyboardButton(
+                text="➡️ Вперёд",
+                callback_data=_make_callback(prefix, page + 1, *payload),
+            )
+        )
+    if not buttons:
+        return None
+    return InlineKeyboardMarkup(inline_keyboard=[buttons])
+
+
+def _format_supplier_item(item: Dict[str, Any]) -> str:
+    name = item.get("name") or item.get("title") or "Без названия"
+    parts = [f"🏷️ {name}"]
+    if item.get("category"):
+        parts.append(f"📂 Категория: {item['category']}")
+    if item.get("location"):
+        parts.append(f"📍 Город: {item['location']}")
+    if item.get("phone"):
+        parts.append(f"☎️ Телефон: {item['phone']}")
+    if item.get("website"):
+        parts.append(f"🌐 {item['website']}")
+    return "\n".join(parts)
+
+
+def _format_carrier_item(carrier: Carrier) -> str:
+    parts = [f"🚚 {carrier.name}"]
+    if carrier.regions:
+        parts.append(f"🗺️ Регионы: {', '.join(carrier.regions)}")
+    if carrier.vehicle_types:
+        parts.append(f"🚛 Транспорт: {', '.join(carrier.vehicle_types)}")
+    if carrier.phone:
+        parts.append(f"☎️ {carrier.phone}")
+    if carrier.email:
+        parts.append(f"✉️ {carrier.email}")
+    if carrier.rating is not None:
+        parts.append(f"⭐ Рейтинг: {carrier.rating:.1f}")
+    return "\n".join(parts)
+
+
+def _format_section(key: str) -> str:
+    section = get_section(key)
+    header = f"📘 {section.title} (обновлено {section.updated_at:%d.%m.%Y %H:%M} UTC)"
+    return "\n\n".join([header, "\n".join(section.content)])
+
+
+async def _send_supplier_results(
+    message: types.Message,
+    query: str,
+    source: str,
+    page: int,
+    *,
+    edit: bool = False,
+) -> None:
+    try:
+        result = await search_suppliers(
+            query=query,
+            source_name=source,
+            page=page,
+            limit=SUPPLIERS_PAGE_SIZE + 1,
+        )
+    except KeyError:
+        text = f"❌ Источник '{source}' не найден."
+        keyboard = None
+    except Exception as exc:
+        text = f"❌ Ошибка поиска поставщиков: {exc}"
+        keyboard = None
+    else:
+        items = result.results[:SUPPLIERS_PAGE_SIZE]
+        has_more = len(result.results) > SUPPLIERS_PAGE_SIZE
+        has_prev = page > 1
+        keyboard = _build_pagination_keyboard(
+            "sup", page, has_prev, has_more, [source, query]
+        )
+        if items:
+            offset = (page - 1) * SUPPLIERS_PAGE_SIZE
+            body = []
+            for idx, item in enumerate(items, start=1):
+                body.append(f"{offset + idx}. {_format_supplier_item(item)}")
+            text = (
+                f"📦 Источник: {source}\n"
+                f"🔎 Запрос: {query}\n"
+                f"Страница {page}\n\n"
+                + "\n\n".join(body)
+            )
+        else:
+            text = f"⚠️ По запросу '{query}' ничего не найдено."
+            keyboard = None
+
+    if edit:
+        await message.edit_text(text, reply_markup=keyboard, disable_web_page_preview=True)
+    else:
+        await message.reply(text, reply_markup=keyboard, disable_web_page_preview=True)
+
+
+async def _send_logistics_results(
+    message: types.Message,
+    query: Optional[str],
+    regions: List[str],
+    min_rating: Optional[float],
+    page: int,
+    *,
+    edit: bool = False,
+) -> None:
+    initialise_storage()
+    carriers = find_carriers(
         query=query,
-        sku=sku,
-        title=title,
-        sources=sources,
+        regions=regions or None,
+        min_rating=min_rating,
+        limit=LOGISTICS_PAGE_SIZE + 1,
+        offset=(page - 1) * LOGISTICS_PAGE_SIZE,
     )
+    items = carriers[:LOGISTICS_PAGE_SIZE]
+    has_more = len(carriers) > LOGISTICS_PAGE_SIZE
+    has_prev = page > 1
+    payload = [query or "", ",".join(regions), str(min_rating or "")]
+    keyboard = _build_pagination_keyboard("log", page, has_prev, has_more, payload)
+
+    if items:
+        offset = (page - 1) * LOGISTICS_PAGE_SIZE
+        body = []
+        for idx, carrier in enumerate(items, start=1):
+            body.append(f"{offset + idx}. {_format_carrier_item(carrier)}")
+        filters = ["🚚 Каталог перевозчиков"]
+        if query:
+            filters.append(f"🔍 Имя содержит: {query}")
+        if regions:
+            filters.append(f"🌍 Регионы: {', '.join(regions)}")
+        if min_rating is not None:
+            filters.append(f"⭐ Рейтинг от {min_rating}")
+        text = "\n".join(filters) + "\n\n" + "\n\n".join(body)
+    else:
+        text = "⚠️ Перевозчики по заданным условиям не найдены."
+        keyboard = None
+
+    if edit:
+        await message.edit_text(text, reply_markup=keyboard, disable_web_page_preview=True)
+    else:
+        await message.reply(text, reply_markup=keyboard, disable_web_page_preview=True)
+
+
+async def _send_faq(message: types.Message, page: int, *, edit: bool = False) -> None:
+    items, total_pages = get_paginated_faq(page=page, per_page=FAQ_PAGE_SIZE)
+    if not items and total_pages and page > total_pages:
+        items, total_pages = get_paginated_faq(page=total_pages, per_page=FAQ_PAGE_SIZE)
+        page = total_pages
+
+    has_prev = page > 1
+    has_next = page < total_pages
+    keyboard = _build_pagination_keyboard("faq", page, has_prev, has_next, [])
+
+    if items:
+        pairs = []
+        for idx in range(0, len(items), 2):
+            question = items[idx]
+            answer = items[idx + 1] if idx + 1 < len(items) else ""
+            pairs.append(f"❓ {question}\n💡 {answer}")
+        text = "📚 FAQ\n\n" + "\n\n".join(pairs) + f"\n\nСтраница {page} из {total_pages}"
+    else:
+        text = "FAQ пока пуст."
+
+    if edit:
+        await message.edit_text(text, reply_markup=keyboard, disable_web_page_preview=True)
+    else:
+        await message.reply(text, reply_markup=keyboard, disable_web_page_preview=True)
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
