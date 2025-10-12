@@ -1,13 +1,10 @@
 import json
-import time
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime
-from sqlalchemy.orm import declarative_base, sessionmaker
-from config import settings
 from datetime import datetime
 
-engine = create_engine(settings.DATABASE_URL, future=True)
-SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
-Base = declarative_base()
+from sqlalchemy import Column, DateTime, Integer, String, Text
+
+from database import Base, SessionLocal, engine
+
 
 class ParseResult(Base):
     __tablename__ = "parse_results"
@@ -17,13 +14,15 @@ class ParseResult(Base):
     count = Column(Integer, default=0)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
+
 def init_db():
     """Инициализация всех таблиц проекта."""
 
-    # Импортируем модели, чтобы SQLAlchemy знала о них перед созданием таблиц
-    import profiles.models  # noqa: F401
+    # Импортируем модели для регистрации метаданных
+    from profiles import models  # noqa: F401
 
     Base.metadata.create_all(engine)
+
 
 def save_results(profile_name: str, results):
     """Сохраняет результаты парсинга в БД"""
@@ -37,6 +36,7 @@ def save_results(profile_name: str, results):
         )
         session.add(pr)
         session.commit()
+
 
 def get_recent_results(limit=100):
     """Получить последние результаты из БД"""
