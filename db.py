@@ -5,6 +5,7 @@ from sqlalchemy import Column, DateTime, Integer, String, Text
 
 from database import Base, SessionLocal, engine
 
+
 class ParseResult(Base):
     __tablename__ = "parse_results"
     id = Column(Integer, primary_key=True, index=True)
@@ -13,11 +14,15 @@ class ParseResult(Base):
     count = Column(Integer, default=0)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
+
 def init_db():
+    """Инициализация всех таблиц проекта."""
+
     # Импортируем модели для регистрации метаданных
     from profiles import models  # noqa: F401
 
     Base.metadata.create_all(engine)
+
 
 def save_results(profile_name: str, results):
     """Сохраняет результаты парсинга в БД"""
@@ -31,6 +36,7 @@ def save_results(profile_name: str, results):
         )
         session.add(pr)
         session.commit()
+
 
 def get_recent_results(limit=100):
     """Получить последние результаты из БД"""
