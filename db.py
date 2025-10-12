@@ -1,9 +1,22 @@
 import json
 import time
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime
-from sqlalchemy.orm import declarative_base, sessionmaker
-from config import settings
 from datetime import datetime, timezone
+from typing import Any, Dict, Optional
+
+from sqlalchemy import (
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    create_engine,
+    select,
+)
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+
+from config import settings
 
 engine = create_engine(settings.DATABASE_URL, future=True)
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
@@ -30,7 +43,7 @@ class ExternalNews(Base):
     summary = Column(Text, default="")
     source = Column(String, nullable=False)
     published_at = Column(DateTime, nullable=False)
-    fetched_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    fetched_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
 class DirectoryEntry(Base):
@@ -44,27 +57,24 @@ class DirectoryEntry(Base):
     contact_json = Column(Text)
     metadata_json = Column(Text)
     updated_at = Column(DateTime, nullable=False)
-    fetched_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    fetched_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
-def init_db():
-    """Инициализация всех таблиц проекта."""
+class ItemSnapshot(Base):
+    __tablename__ = "item_snapshots"
 
-    # Импортируем модели для регистрации метаданных
-    from profiles import models  # noqa: F401
+    id = Column(Integer, primary_key=True, index=True)
+    profile_name = Column(String, index=True, nullable=False)
+    item_id = Column(String, index=True, nullable=False)
+    name = Column(String, nullable=True)
+    category = Column(String, nullable=True)
+    price = Column(Float, nullable=True)
+    currency = Column(String(16), nullable=True)
+    stock = Column(Integer, nullable=True)
+    availability = Column(String, nullable=True)
+    data_json = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
-    Base.metadata.create_all(engine)
-
-
-def save_results(profile_name: str, results):
-    """Сохраняет результаты парсинга в БД"""
-    init_db()
-    with SessionLocal() as session:
-        pr = ParseResult(
-            profile_name=profile_name,
-            data_json=json.dumps(results, ensure_ascii=False),
-            count=len(results),
-            timestamp=datetime.now(timezone.utc)
-        )
-        session.add(pr)
-        session.commit()
+    price_history = relationship(
+        "PriceHistory", back_populates="snapshot", cascade="all, delete-orphan"
+    )
