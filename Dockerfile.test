@@ -1,0 +1,55 @@
+FROM python:3.11-slim
+
+# Установка системных зависимостей
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    libxml2-dev \
+    libxslt-dev \
+    libffi-dev \
+    libssl-dev \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Создание рабочей директории
+WORKDIR /app
+
+# Копирование файлов зависимостей
+COPY requirements.txt .
+
+# Установка Python зависимостей
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Установка дополнительных зависимостей для тестирования
+RUN pip install --no-cache-dir \
+    pytest-cov \
+    pytest-asyncio \
+    pytest-mock \
+    pytest-xdist \
+    black \
+    isort \
+    flake8 \
+    mypy \
+    pylint \
+    bandit \
+    safety \
+    locust \
+    psutil
+
+# Установка Playwright браузеров
+RUN playwright install chromium
+
+# Копирование исходного кода
+COPY . .
+
+# Создание пользователя для безопасности
+RUN useradd -m -u 1000 testuser && chown -R testuser:testuser /app
+USER testuser
+
+# Переменные окружения
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV PYTEST_CURRENT_TEST=true
+
+# Команда по умолчанию
+CMD ["python", "run_tests.py", "--type", "all", "--coverage", "--verbose"]

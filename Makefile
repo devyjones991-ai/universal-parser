@@ -107,3 +107,114 @@ status: ## Показать статус системы
 	@echo ""
 	@echo "$(YELLOW)🐳 Docker статус:$(NC)"
 	@docker-compose ps 2>/dev/null || echo "$(YELLOW)Docker не запущен$(NC)"
+
+# Тестирование
+test-unit: ## Запустить unit тесты
+	@echo "$(GREEN)🧪 Запуск unit тестов...$(NC)"
+	python run_tests.py --type unit --coverage --verbose
+
+test-integration: ## Запустить integration тесты
+	@echo "$(GREEN)🧪 Запуск integration тестов...$(NC)"
+	python run_tests.py --type integration --verbose
+
+test-performance: ## Запустить performance тесты
+	@echo "$(GREEN)🧪 Запуск performance тестов...$(NC)"
+	python run_tests.py --type performance --verbose
+
+test-all: ## Запустить все тесты
+	@echo "$(GREEN)🧪 Запуск всех тестов...$(NC)"
+	python run_tests.py --type all --coverage --verbose
+
+test-fast: ## Запустить быстрые тесты
+	@echo "$(GREEN)🧪 Запуск быстрых тестов...$(NC)"
+	python run_tests.py --type all --fast --coverage --verbose
+
+test-parallel: ## Запустить тесты параллельно
+	@echo "$(GREEN)🧪 Запуск тестов параллельно...$(NC)"
+	python run_tests.py --type all --parallel --coverage --verbose
+
+# Docker тестирование
+test-docker: ## Запустить тесты в Docker
+	@echo "$(GREEN)🐳 Запуск тестов в Docker...$(NC)"
+	docker-compose -f docker-compose.test.yml up --build test-runner
+
+test-docker-performance: ## Запустить performance тесты в Docker
+	@echo "$(GREEN)🐳 Запуск performance тестов в Docker...$(NC)"
+	docker-compose -f docker-compose.test.yml up --build test-performance
+
+test-docker-integration: ## Запустить integration тесты в Docker
+	@echo "$(GREEN)🐳 Запуск integration тестов в Docker...$(NC)"
+	docker-compose -f docker-compose.test.yml up --build test-integration
+
+test-docker-security: ## Запустить security тесты в Docker
+	@echo "$(GREEN)🐳 Запуск security тестов в Docker...$(NC)"
+	docker-compose -f docker-compose.test.yml up --build test-security
+
+test-docker-linting: ## Запустить linting тесты в Docker
+	@echo "$(GREEN)🐳 Запуск linting тестов в Docker...$(NC)"
+	docker-compose -f docker-compose.test.yml up --build test-linting
+
+test-docker-all: ## Запустить все тесты в Docker
+	@echo "$(GREEN)🐳 Запуск всех тестов в Docker...$(NC)"
+	docker-compose -f docker-compose.test.yml up --build
+
+# Качество кода
+lint: ## Запустить линтеры
+	@echo "$(GREEN)🔍 Запуск линтеров...$(NC)"
+	flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+	black --check .
+	isort --check-only .
+
+lint-fix: ## Исправить проблемы линтеров
+	@echo "$(GREEN)🔧 Исправление проблем линтеров...$(NC)"
+	black .
+	isort .
+
+type-check: ## Проверка типов
+	@echo "$(GREEN)🔍 Проверка типов...$(NC)"
+	mypy . --ignore-missing-imports
+
+security-check: ## Проверка безопасности
+	@echo "$(GREEN)🔒 Проверка безопасности...$(NC)"
+	safety check
+	bandit -r . -f json -o bandit-report.json
+
+# Pre-commit
+pre-commit-install: ## Установить pre-commit hooks
+	@echo "$(GREEN)🔧 Установка pre-commit hooks...$(NC)"
+	pip install pre-commit
+	pre-commit install
+
+pre-commit-run: ## Запустить pre-commit на всех файлах
+	@echo "$(GREEN)🔧 Запуск pre-commit на всех файлах...$(NC)"
+	pre-commit run --all-files
+
+# CI/CD
+ci-local: ## Запустить локальный CI
+	@echo "$(GREEN)🚀 Запуск локального CI...$(NC)"
+	$(MAKE) lint
+	$(MAKE) type-check
+	$(MAKE) security-check
+	$(MAKE) test-all
+
+ci-docker: ## Запустить CI в Docker
+	@echo "$(GREEN)🚀 Запуск CI в Docker...$(NC)"
+	docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit
+
+# Очистка тестов
+clean-tests: ## Очистить результаты тестов
+	@echo "$(YELLOW)🧹 Очистка результатов тестов...$(NC)"
+	rm -rf htmlcov/
+	rm -rf .coverage
+	rm -rf coverage.xml
+	rm -rf .pytest_cache/
+	rm -rf test-results.xml
+	rm -rf bandit-report.json
+	rm -rf safety-report.json
+	rm -rf .mypy_cache/
+	rm -rf .pylint.d/
+
+clean-docker-tests: ## Очистить Docker тесты
+	@echo "$(YELLOW)🧹 Очистка Docker тестов...$(NC)"
+	docker-compose -f docker-compose.test.yml down -v
+	docker system prune -f

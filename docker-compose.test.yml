@@ -1,0 +1,139 @@
+version: '3.8'
+
+services:
+  test-db:
+    image: postgres:15-alpine
+    container_name: universal-parser-test-db
+    environment:
+      POSTGRES_DB: universal_parser_test
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - test_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d universal_parser_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  test-redis:
+    image: redis:7-alpine
+    container_name: universal-parser-test-redis
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: universal-parser-test-runner
+    environment:
+      - DATABASE_URL=postgresql://test_user:test_password@test-db:5432/universal_parser_test
+      - REDIS_URL=redis://test-redis:6379
+      - PYTHONPATH=/app
+      - PYTEST_CURRENT_TEST=true
+    volumes:
+      - .:/app
+      - test_coverage:/app/htmlcov
+    depends_on:
+      test-db:
+        condition: service_healthy
+      test-redis:
+        condition: service_healthy
+    command: >
+      sh -c "
+        python init_db.py &&
+        python run_tests.py --type all --coverage --verbose
+      "
+
+  test-performance:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: universal-parser-test-performance
+    environment:
+      - DATABASE_URL=postgresql://test_user:test_password@test-db:5432/universal_parser_test
+      - REDIS_URL=redis://test-redis:6379
+      - PYTHONPATH=/app
+    volumes:
+      - .:/app
+    depends_on:
+      test-db:
+        condition: service_healthy
+      test-redis:
+        condition: service_healthy
+    command: >
+      sh -c "
+        python init_db.py &&
+        python run_tests.py --type performance --verbose
+      "
+
+  test-integration:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: universal-parser-test-integration
+    environment:
+      - DATABASE_URL=postgresql://test_user:test_password@test-db:5432/universal_parser_test
+      - REDIS_URL=redis://test-redis:6379
+      - PYTHONPATH=/app
+    volumes:
+      - .:/app
+    depends_on:
+      test-db:
+        condition: service_healthy
+      test-redis:
+        condition: service_healthy
+    command: >
+      sh -c "
+        python init_db.py &&
+        python run_tests.py --type integration --verbose
+      "
+
+  test-security:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: universal-parser-test-security
+    environment:
+      - PYTHONPATH=/app
+    volumes:
+      - .:/app
+    command: >
+      sh -c "
+        pip install safety bandit &&
+        safety check --json --output safety-report.json &&
+        bandit -r . -f json -o bandit-report.json &&
+        echo 'Security checks completed'
+      "
+
+  test-linting:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: universal-parser-test-linting
+    environment:
+      - PYTHONPATH=/app
+    volumes:
+      - .:/app
+    command: >
+      sh -c "
+        pip install black isort flake8 mypy pylint &&
+        black --check . &&
+        isort --check-only . &&
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics &&
+        mypy . --ignore-missing-imports &&
+        pylint . --disable=C0114,C0116,R0903 &&
+        echo 'Linting checks completed'
+      "
+
+volumes:
+  test_db_data:
+  test_coverage:
