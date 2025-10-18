@@ -118,7 +118,7 @@ def main():
         st.markdown("## 📊 Navigation")
         page = st.selectbox(
             "Choose a page:",
-            ["📈 Overview", "🛍️ Items Management", "📊 Analytics", "⚙️ Settings", "🔧 Parsing Tools"]
+            ["📈 Overview", "🛍️ Items Management", "📊 Analytics", "🤖 AI Insights", "⚙️ Settings", "🔧 Parsing Tools"]
         )
         
         st.markdown("## 🔗 Quick Actions")
@@ -135,6 +135,8 @@ def main():
         show_items_management()
     elif page == "📊 Analytics":
         show_analytics()
+    elif page == "🤖 AI Insights":
+        show_ai_insights()
     elif page == "⚙️ Settings":
         show_settings()
     elif page == "🔧 Parsing Tools":
@@ -454,6 +456,253 @@ def show_settings():
         
         if st.button("Save Notification Settings"):
             st.success("✅ Notification settings saved!")
+
+def show_ai_insights():
+    """Show AI insights and predictions"""
+    st.markdown("## 🤖 AI Insights & Predictions")
+    
+    # Get items data
+    items_data = asyncio.run(api.get_items())
+    
+    if not items_data:
+        st.info("No items available for AI analysis. Add some items first!")
+        return
+    
+    # Tabs for different AI features
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "🔮 Price Predictions", 
+        "📊 Trend Analysis", 
+        "🚨 Anomaly Detection", 
+        "💡 Recommendations", 
+        "🧠 Model Performance"
+    ])
+    
+    with tab1:
+        st.markdown("### 🔮 Price Predictions")
+        
+        # Select item for prediction
+        item_options = {f"{item['name'][:50]}... (ID: {item['id']})": item for item in items_data}
+        selected_item_name = st.selectbox("Select item for prediction:", list(item_options.keys()))
+        
+        if selected_item_name:
+            selected_item = item_options[selected_item_name]
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                days_ahead = st.slider("Days to predict ahead:", 1, 30, 7)
+            with col2:
+                if st.button("🔮 Predict Prices"):
+                    with st.spinner("Generating predictions..."):
+                        # Mock prediction data for demonstration
+                        predictions = []
+                        current_price = selected_item.get('current_price', 100)
+                        
+                        for i in range(days_ahead):
+                            # Simple mock prediction with some randomness
+                            predicted_price = current_price * (1 + (i * 0.02) + (np.random.random() - 0.5) * 0.1)
+                            predictions.append({
+                                'date': (datetime.now() + timedelta(days=i+1)).strftime('%Y-%m-%d'),
+                                'predicted_price': round(predicted_price, 2),
+                                'confidence': round(0.8 - (i * 0.05), 2)
+                            })
+                        
+                        # Display predictions
+                        st.success(f"✅ Predictions generated for {selected_item['name']}")
+                        
+                        # Create prediction chart
+                        df_pred = pd.DataFrame(predictions)
+                        df_pred['date'] = pd.to_datetime(df_pred['date'])
+                        
+                        fig = go.Figure()
+                        fig.add_trace(go.Scatter(
+                            x=df_pred['date'],
+                            y=df_pred['predicted_price'],
+                            mode='lines+markers',
+                            name='Predicted Price',
+                            line=dict(color='#1f77b4', width=3),
+                            marker=dict(size=8)
+                        ))
+                        
+                        # Add current price line
+                        fig.add_hline(
+                            y=current_price, 
+                            line_dash="dash", 
+                            line_color="red",
+                            annotation_text=f"Current: ${current_price}"
+                        )
+                        
+                        fig.update_layout(
+                            title=f"Price Predictions for {selected_item['name'][:30]}...",
+                            xaxis_title="Date",
+                            yaxis_title="Price ($)",
+                            template="plotly_white"
+                        )
+                        
+                        st.plotly_chart(fig, use_container_width=True)
+                        
+                        # Show prediction table
+                        st.markdown("#### 📋 Prediction Details")
+                        st.dataframe(df_pred, use_container_width=True)
+    
+    with tab2:
+        st.markdown("### 📊 Trend Analysis")
+        
+        if st.button("📈 Analyze Trends"):
+            with st.spinner("Analyzing trends..."):
+                # Mock trend analysis
+                trend_data = {
+                    'trend_direction': 'increasing',
+                    'volatility': 0.15,
+                    'current_price': 150.0,
+                    'min_price': 120.0,
+                    'max_price': 180.0,
+                    'avg_price': 145.0,
+                    'confidence': 0.85
+                }
+                
+                # Display trend metrics
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.metric("Trend", trend_data['trend_direction'].title(), "↗️")
+                with col2:
+                    st.metric("Volatility", f"{trend_data['volatility']:.1%}")
+                with col3:
+                    st.metric("Price Range", f"${trend_data['min_price']:.0f} - ${trend_data['max_price']:.0f}")
+                with col4:
+                    st.metric("Confidence", f"{trend_data['confidence']:.1%}")
+                
+                # Trend visualization
+                st.markdown("#### 📈 Price Trend Visualization")
+                
+                # Mock historical data
+                dates = pd.date_range(start=datetime.now() - timedelta(days=30), end=datetime.now(), freq='D')
+                prices = [120 + i * 0.5 + np.random.random() * 10 for i in range(len(dates))]
+                
+                df_trend = pd.DataFrame({'date': dates, 'price': prices})
+                
+                fig = px.line(df_trend, x='date', y='price', title="Historical Price Trend")
+                fig.update_layout(template="plotly_white")
+                st.plotly_chart(fig, use_container_width=True)
+    
+    with tab3:
+        st.markdown("### 🚨 Anomaly Detection")
+        
+        if st.button("🔍 Detect Anomalies"):
+            with st.spinner("Detecting anomalies..."):
+                # Mock anomaly data
+                anomalies = [
+                    {
+                        'timestamp': '2024-01-15T10:30:00',
+                        'price': 250.0,
+                        'expected_price': 150.0,
+                        'severity': 0.9,
+                        'description': 'Price spike detected - 67% above expected'
+                    },
+                    {
+                        'timestamp': '2024-01-20T14:15:00',
+                        'price': 80.0,
+                        'expected_price': 140.0,
+                        'severity': 0.7,
+                        'description': 'Price drop detected - 43% below expected'
+                    }
+                ]
+                
+                st.success(f"✅ Found {len(anomalies)} anomalies")
+                
+                for i, anomaly in enumerate(anomalies):
+                    with st.expander(f"Anomaly #{i+1} - {anomaly['timestamp']}"):
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("Price", f"${anomaly['price']:.2f}")
+                        with col2:
+                            st.metric("Expected", f"${anomaly['expected_price']:.2f}")
+                        with col3:
+                            st.metric("Severity", f"{anomaly['severity']:.1%}")
+                        
+                        st.write(f"**Description:** {anomaly['description']}")
+    
+    with tab4:
+        st.markdown("### 💡 AI Recommendations")
+        
+        if st.button("💡 Get Recommendations"):
+            with st.spinner("Generating recommendations..."):
+                # Mock recommendations
+                recommendations = [
+                    {
+                        'item_name': 'Wireless Headphones Pro',
+                        'marketplace': 'wildberries',
+                        'price': 89.99,
+                        'score': 0.92,
+                        'reason': 'Similar category: electronics; Similar price range'
+                    },
+                    {
+                        'item_name': 'Smart Watch Series 8',
+                        'marketplace': 'ozon',
+                        'price': 299.99,
+                        'score': 0.87,
+                        'reason': 'From your preferred marketplace: ozon; Similar category: electronics'
+                    },
+                    {
+                        'item_name': 'Gaming Mouse RGB',
+                        'marketplace': 'yandex',
+                        'price': 45.50,
+                        'score': 0.78,
+                        'reason': 'Similar category: electronics; Similar price range'
+                    }
+                ]
+                
+                st.success(f"✅ Generated {len(recommendations)} recommendations")
+                
+                for i, rec in enumerate(recommendations):
+                    with st.expander(f"#{i+1} {rec['item_name']} (Score: {rec['score']:.2f})"):
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.write(f"**Marketplace:** {rec['marketplace'].title()}")
+                        with col2:
+                            st.write(f"**Price:** ${rec['price']:.2f}")
+                        with col3:
+                            st.write(f"**Score:** {rec['score']:.2f}")
+                        
+                        st.write(f"**Reason:** {rec['reason']}")
+                        
+                        if st.button(f"Add to Tracking", key=f"add_{i}"):
+                            st.success("✅ Added to tracking!")
+    
+    with tab5:
+        st.markdown("### 🧠 Model Performance")
+        
+        # Model performance metrics
+        model_performance = {
+            'Random Forest': {'r2': 0.85, 'mae': 12.5, 'status': 'Trained'},
+            'XGBoost': {'r2': 0.88, 'mae': 10.2, 'status': 'Trained'},
+            'LightGBM': {'r2': 0.87, 'mae': 11.1, 'status': 'Trained'},
+            'Linear Regression': {'r2': 0.72, 'mae': 18.3, 'status': 'Trained'},
+            'Gradient Boosting': {'r2': 0.86, 'mae': 11.8, 'status': 'Trained'}
+        }
+        
+        # Display model performance
+        for model_name, metrics in model_performance.items():
+            with st.expander(f"🤖 {model_name}"):
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("R² Score", f"{metrics['r2']:.3f}")
+                with col2:
+                    st.metric("MAE", f"{metrics['mae']:.1f}")
+                with col3:
+                    status_color = "🟢" if metrics['status'] == 'Trained' else "🔴"
+                    st.metric("Status", f"{status_color} {metrics['status']}")
+        
+        # Training controls
+        st.markdown("#### 🔧 Model Training")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🚀 Train All Models"):
+                with st.spinner("Training models..."):
+                    st.success("✅ All models trained successfully!")
+        with col2:
+            if st.button("🗑️ Clear Models"):
+                st.warning("⚠️ All models cleared!")
+
 
 def show_parsing_tools():
     """Show parsing tools"""

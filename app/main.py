@@ -10,8 +10,9 @@ import time
 import logging
 
 from app.core.config import settings
-from app.core.database import init_db
-from app.api.v1.endpoints import items
+from app.core.database import init_db, init_async_db, close_db
+from app.core.cache import cache_service
+from app.api.v1.endpoints import items, parsing, ai
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -26,15 +27,21 @@ async def lifespan(app: FastAPI):
     
     # Initialize database
     init_db()
+    await init_async_db()
     logger.info("✅ Database initialized")
     
-    # TODO: Initialize Redis connection
+    # Initialize Redis cache
+    await cache_service.connect()
+    logger.info("✅ Cache service initialized")
+    
     # TODO: Start background tasks (scheduler, monitoring)
     
     yield
     
     # Shutdown
     logger.info("🛑 Shutting down Universal Parser API...")
+    await cache_service.disconnect()
+    await close_db()
 
 
 # Create FastAPI application
@@ -103,6 +110,18 @@ app.include_router(
     items.router,
     prefix=f"{settings.api_v1_prefix}/items",
     tags=["items"]
+)
+
+app.include_router(
+    parsing.router,
+    prefix=f"{settings.api_v1_prefix}/parsing",
+    tags=["parsing"]
+)
+
+app.include_router(
+    ai.router,
+    prefix=f"{settings.api_v1_prefix}/ai",
+    tags=["ai"]
 )
 
 
