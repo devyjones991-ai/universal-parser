@@ -118,7 +118,7 @@ def main():
         st.markdown("## 📊 Navigation")
         page = st.selectbox(
             "Choose a page:",
-            ["📈 Overview", "🛍️ Items Management", "📊 Analytics", "🤖 AI Insights", "🔍 Niche Analysis", "⚙️ Settings", "🔧 Parsing Tools"]
+            ["📈 Overview", "🛍️ Items Management", "📊 Analytics", "🤖 AI Insights", "🔍 Niche Analysis", "💰 Monetization", "⚙️ Settings", "🔧 Parsing Tools"]
         )
         
         st.markdown("## 🔗 Quick Actions")
@@ -139,6 +139,8 @@ def main():
         show_ai_insights()
     elif page == "🔍 Niche Analysis":
         show_niche_analysis()
+    elif page == "💰 Monetization":
+        show_monetization()
     elif page == "⚙️ Settings":
         show_settings()
     elif page == "🔧 Parsing Tools":
@@ -1124,6 +1126,12 @@ def show_parsing_tools():
         with col2:
             if st.button("Clear Parsing Cache"):
                 st.info("Parsing cache cleared!")
+
+def show_monetization():
+    """Show monetization dashboard"""
+    # Import the monetization page
+    from pages.monetization import main as monetization_main
+    monetization_main()
 
 if __name__ == "__main__":
     main()

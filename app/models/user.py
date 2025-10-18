@@ -3,16 +3,18 @@
 """
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, JSON, Text
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import UUID
 from app.core.database import Base
 from datetime import datetime
 from typing import Optional
+import uuid
 
 
 class User(Base):
     """Модель пользователя"""
     __tablename__ = "users"
     
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     telegram_id = Column(Integer, unique=True, nullable=False, index=True)
     username = Column(String(255), nullable=True)
     first_name = Column(String(255), nullable=True)
@@ -44,6 +46,11 @@ class User(Base):
     tracked_items = relationship("TrackedItem", back_populates="user", cascade="all, delete-orphan")
     price_history = relationship("PriceHistory", back_populates="user", cascade="all, delete-orphan")
     api_keys = relationship("APIKey", back_populates="user", cascade="all, delete-orphan")
+    subscription = relationship("Subscription", back_populates="user", uselist=False)
+    payments = relationship("Payment", back_populates="user", cascade="all, delete-orphan")
+    cashbacks = relationship("Cashback", back_populates="user", cascade="all, delete-orphan")
+    referrals_sent = relationship("Referral", foreign_keys="Referral.referrer_id", back_populates="referrer")
+    referrals_received = relationship("Referral", foreign_keys="Referral.referred_id", back_populates="referred")
     
     def __repr__(self):
         return f"<User(id={self.id}, telegram_id={self.telegram_id}, username={self.username})>"
@@ -53,8 +60,8 @@ class APIKey(Base):
     """API ключи для пользователей"""
     __tablename__ = "api_keys"
     
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     key_name = Column(String(100), nullable=False)
     key_hash = Column(String(255), nullable=False, unique=True)
     permissions = Column(JSON, default={})
