@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     
     # Основные настройки
     app_name: str = "Universal Parser"
-    app_version: str = "0.2.0"
+    app_version: str = "0.2.1"
     debug: bool = False
     
     # API настройки
@@ -22,7 +22,14 @@ class Settings(BaseSettings):
     
     # База данных
     database_url: str = "sqlite:///./universal_parser.db"
+    database_url_postgres: str = "postgresql://parser:parser123@localhost:5432/universal_parser"
     redis_url: str = "redis://localhost:6379"
+    
+    # Database settings
+    database_pool_size: int = 10
+    database_max_overflow: int = 20
+    database_pool_timeout: int = 30
+    database_pool_recycle: int = 3600
     
     # Telegram Bot
     telegram_bot_token: str = ""
