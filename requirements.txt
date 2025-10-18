@@ -49,6 +49,11 @@ xgboost>=2.0.0
 lightgbm>=4.1.0
 optuna>=3.4.0
 
+# Advanced AI & ML for Phase 1
+prophet>=1.1.5
+statsmodels>=0.14.0
+tensorflow>=2.15.0
+
 # Async and performance
 uvloop>=0.19.0
 asyncio-mqtt>=0.16.0
