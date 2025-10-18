@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "universal-parser"
-version = "0.2.5"
+version = "0.2.6"
 description = "Comprehensive marketplace monitoring platform"
 authors = [
     {name = "Universal Parser Team", email = "team@universal-parser.com"}
