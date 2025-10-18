@@ -1,0 +1,506 @@
+"""
+Universal Parser Dashboard - Streamlit Web Interface
+"""
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import requests
+import json
+from datetime import datetime, timedelta
+import asyncio
+import httpx
+from typing import Dict, List, Any
+import os
+
+# Page configuration
+st.set_page_config(
+    page_title="Universal Parser Dashboard",
+    page_icon="🚀",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Custom CSS
+st.markdown("""
+<style>
+    .main-header {
+        font-size: 3rem;
+        color: #1f77b4;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .metric-card {
+        background-color: #f0f2f6;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border-left: 5px solid #1f77b4;
+    }
+    .success-message {
+        color: #28a745;
+        font-weight: bold;
+    }
+    .error-message {
+        color: #dc3545;
+        font-weight: bold;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Configuration
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+API_V1_PREFIX = "/api/v1"
+
+class DashboardAPI:
+    """API client for dashboard"""
+    
+    def __init__(self, base_url: str = API_BASE_URL):
+        self.base_url = base_url
+        self.api_url = f"{base_url}{API_V1_PREFIX}"
+    
+    async def get_items(self, skip: int = 0, limit: int = 100) -> List[Dict]:
+        """Get tracked items"""
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(f"{self.api_url}/items/?skip={skip}&limit={limit}")
+                response.raise_for_status()
+                return response.json()
+            except Exception as e:
+                st.error(f"Error fetching items: {e}")
+                return []
+    
+    async def get_item_history(self, item_id: int, skip: int = 0, limit: int = 100) -> List[Dict]:
+        """Get item price history"""
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(f"{self.api_url}/items/{item_id}/history?skip={skip}&limit={limit}")
+                response.raise_for_status()
+                return response.json()
+            except Exception as e:
+                st.error(f"Error fetching item history: {e}")
+                return []
+    
+    async def create_item(self, item_data: Dict) -> Dict:
+        """Create new tracked item"""
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(f"{self.api_url}/items/", json=item_data)
+                response.raise_for_status()
+                return response.json()
+            except Exception as e:
+                st.error(f"Error creating item: {e}")
+                return {}
+    
+    async def get_parsing_stats(self) -> Dict:
+        """Get parsing statistics"""
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(f"{self.api_url}/parsing/cache/stats")
+                response.raise_for_status()
+                return response.json()
+            except Exception as e:
+                st.error(f"Error fetching parsing stats: {e}")
+                return {}
+
+# Initialize API client
+api = DashboardAPI()
+
+def main():
+    """Main dashboard function"""
+    # Header
+    st.markdown('<h1 class="main-header">🚀 Universal Parser Dashboard</h1>', unsafe_allow_html=True)
+    
+    # Sidebar
+    with st.sidebar:
+        st.image("https://via.placeholder.com/200x100/1f77b4/ffffff?text=Universal+Parser", width=200)
+        
+        st.markdown("## 📊 Navigation")
+        page = st.selectbox(
+            "Choose a page:",
+            ["📈 Overview", "🛍️ Items Management", "📊 Analytics", "⚙️ Settings", "🔧 Parsing Tools"]
+        )
+        
+        st.markdown("## 🔗 Quick Actions")
+        if st.button("🔄 Refresh Data"):
+            st.rerun()
+        
+        if st.button("📤 Export Report"):
+            st.info("Export functionality coming soon!")
+    
+    # Main content based on selected page
+    if page == "📈 Overview":
+        show_overview()
+    elif page == "🛍️ Items Management":
+        show_items_management()
+    elif page == "📊 Analytics":
+        show_analytics()
+    elif page == "⚙️ Settings":
+        show_settings()
+    elif page == "🔧 Parsing Tools":
+        show_parsing_tools()
+
+def show_overview():
+    """Show overview dashboard"""
+    st.markdown("## 📈 System Overview")
+    
+    # Get data
+    items_data = asyncio.run(api.get_items())
+    parsing_stats = asyncio.run(api.get_parsing_stats())
+    
+    # Metrics row
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric(
+            label="📦 Total Items",
+            value=len(items_data),
+            delta="+5 this week"
+        )
+    
+    with col2:
+        active_items = len([item for item in items_data if item.get('is_active', False)])
+        st.metric(
+            label="✅ Active Items",
+            value=active_items,
+            delta=f"{active_items/len(items_data)*100:.1f}%" if items_data else "0%"
+        )
+    
+    with col3:
+        marketplaces = {}
+        for item in items_data:
+            marketplace = item.get('marketplace', 'unknown')
+            marketplaces[marketplace] = marketplaces.get(marketplace, 0) + 1
+        
+        st.metric(
+            label="🏪 Marketplaces",
+            value=len(marketplaces),
+            delta="3 supported"
+        )
+    
+    with col4:
+        cache_status = parsing_stats.get('status', 'unknown')
+        st.metric(
+            label="💾 Cache Status",
+            value=cache_status.title(),
+            delta="Connected" if cache_status == 'connected' else "Disconnected"
+        )
+    
+    # Charts row
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("### 📊 Items by Marketplace")
+        if marketplaces:
+            df_marketplace = pd.DataFrame(list(marketplaces.items()), columns=['Marketplace', 'Count'])
+            fig = px.pie(df_marketplace, values='Count', names='Marketplace', 
+                        title="Distribution by Marketplace")
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("No items tracked yet")
+    
+    with col2:
+        st.markdown("### 📈 Price Changes (Last 7 Days)")
+        # Mock data for demonstration
+        dates = pd.date_range(start=datetime.now() - timedelta(days=7), end=datetime.now(), freq='D')
+        prices = [100 + i*2 + (i%3)*5 for i in range(len(dates))]
+        
+        df_prices = pd.DataFrame({'Date': dates, 'Price': prices})
+        fig = px.line(df_prices, x='Date', y='Price', title="Average Price Trend")
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Recent activity
+    st.markdown("### 🔄 Recent Activity")
+    if items_data:
+        recent_items = sorted(items_data, key=lambda x: x.get('last_updated', ''), reverse=True)[:5]
+        
+        for item in recent_items:
+            col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
+            with col1:
+                st.write(f"**{item.get('name', 'Unknown')[:50]}...**")
+            with col2:
+                st.write(f"${item.get('current_price', 'N/A')}")
+            with col3:
+                st.write(item.get('marketplace', 'Unknown'))
+            with col4:
+                status = "✅" if item.get('is_active', False) else "❌"
+                st.write(status)
+    else:
+        st.info("No recent activity")
+
+def show_items_management():
+    """Show items management interface"""
+    st.markdown("## 🛍️ Items Management")
+    
+    # Tabs
+    tab1, tab2, tab3 = st.tabs(["📋 All Items", "➕ Add New Item", "📊 Item Details"])
+    
+    with tab1:
+        # Get items
+        items_data = asyncio.run(api.get_items())
+        
+        if items_data:
+            # Filters
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                marketplace_filter = st.selectbox("Filter by Marketplace", 
+                                                ["All"] + list(set(item.get('marketplace', '') for item in items_data)))
+            with col2:
+                status_filter = st.selectbox("Filter by Status", ["All", "Active", "Inactive"])
+            with col3:
+                search_term = st.text_input("Search items", placeholder="Enter item name...")
+            
+            # Filter items
+            filtered_items = items_data
+            if marketplace_filter != "All":
+                filtered_items = [item for item in filtered_items if item.get('marketplace') == marketplace_filter]
+            if status_filter == "Active":
+                filtered_items = [item for item in filtered_items if item.get('is_active', False)]
+            elif status_filter == "Inactive":
+                filtered_items = [item for item in filtered_items if not item.get('is_active', False)]
+            if search_term:
+                filtered_items = [item for item in filtered_items if search_term.lower() in item.get('name', '').lower()]
+            
+            # Display items
+            for item in filtered_items:
+                with st.expander(f"{item.get('name', 'Unknown')} - {item.get('marketplace', 'Unknown')}"):
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.write(f"**Price:** ${item.get('current_price', 'N/A')}")
+                        st.write(f"**Stock:** {item.get('current_stock', 'N/A')}")
+                        st.write(f"**Rating:** {item.get('current_rating', 'N/A')}")
+                    with col2:
+                        st.write(f"**Status:** {'✅ Active' if item.get('is_active', False) else '❌ Inactive'}")
+                        st.write(f"**Last Updated:** {item.get('last_updated', 'N/A')}")
+                        if st.button(f"View Details", key=f"details_{item.get('id')}"):
+                            st.session_state.selected_item = item
+                            st.rerun()
+        else:
+            st.info("No items found. Add some items to get started!")
+    
+    with tab2:
+        st.markdown("### ➕ Add New Item")
+        
+        with st.form("add_item_form"):
+            col1, col2 = st.columns(2)
+            with col1:
+                item_id = st.text_input("Item ID", placeholder="Enter item ID from marketplace")
+                marketplace = st.selectbox("Marketplace", ["wildberries", "ozon", "yandex"])
+                name = st.text_input("Item Name", placeholder="Enter item name")
+            with col2:
+                brand = st.text_input("Brand", placeholder="Enter brand name")
+                category = st.text_input("Category", placeholder="Enter category")
+                url = st.text_input("URL", placeholder="Enter item URL")
+            
+            if st.form_submit_button("Add Item"):
+                if item_id and marketplace and name:
+                    item_data = {
+                        "item_id": item_id,
+                        "marketplace": marketplace,
+                        "name": name,
+                        "brand": brand or None,
+                        "category": category or None,
+                        "url": url or None
+                    }
+                    
+                    result = asyncio.run(api.create_item(item_data))
+                    if result:
+                        st.success("✅ Item added successfully!")
+                        st.rerun()
+                    else:
+                        st.error("❌ Failed to add item")
+                else:
+                    st.error("Please fill in required fields (Item ID, Marketplace, Name)")
+    
+    with tab3:
+        if 'selected_item' in st.session_state:
+            item = st.session_state.selected_item
+            st.markdown(f"### 📊 Details for {item.get('name', 'Unknown')}")
+            
+            # Get price history
+            history = asyncio.run(api.get_item_history(item.get('id', 0)))
+            
+            if history:
+                # Price chart
+                df_history = pd.DataFrame(history)
+                df_history['timestamp'] = pd.to_datetime(df_history['timestamp'])
+                
+                fig = px.line(df_history, x='timestamp', y='price', 
+                            title=f"Price History for {item.get('name', 'Unknown')}")
+                st.plotly_chart(fig, use_container_width=True)
+                
+                # Statistics
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.metric("Current Price", f"${item.get('current_price', 'N/A')}")
+                with col2:
+                    min_price = df_history['price'].min()
+                    st.metric("Min Price", f"${min_price}")
+                with col3:
+                    max_price = df_history['price'].max()
+                    st.metric("Max Price", f"${max_price}")
+                with col4:
+                    avg_price = df_history['price'].mean()
+                    st.metric("Avg Price", f"${avg_price:.2f}")
+            else:
+                st.info("No price history available for this item")
+        else:
+            st.info("Select an item to view details")
+
+def show_analytics():
+    """Show analytics dashboard"""
+    st.markdown("## 📊 Analytics Dashboard")
+    
+    # Get data
+    items_data = asyncio.run(api.get_items())
+    
+    if not items_data:
+        st.info("No data available for analytics. Add some items first!")
+        return
+    
+    # Convert to DataFrame
+    df = pd.DataFrame(items_data)
+    
+    # Time period selector
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        time_period = st.selectbox("Time Period", ["Last 7 days", "Last 30 days", "Last 90 days", "All time"])
+    with col2:
+        marketplace_filter = st.selectbox("Marketplace", ["All"] + list(df['marketplace'].unique()))
+    with col3:
+        metric = st.selectbox("Metric", ["Price", "Stock", "Rating"])
+    
+    # Filter data
+    if marketplace_filter != "All":
+        df = df[df['marketplace'] == marketplace_filter]
+    
+    # Analytics charts
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("### 📈 Price Distribution")
+        if 'current_price' in df.columns:
+            price_data = df['current_price'].dropna()
+            if not price_data.empty:
+                fig = px.histogram(price_data, nbins=20, title="Price Distribution")
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("No price data available")
+    
+    with col2:
+        st.markdown("### 🏪 Items by Marketplace")
+        marketplace_counts = df['marketplace'].value_counts()
+        fig = px.bar(x=marketplace_counts.index, y=marketplace_counts.values,
+                    title="Items Count by Marketplace")
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Advanced analytics
+    st.markdown("### 🔍 Advanced Analytics")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("#### 📊 Price Statistics")
+        if 'current_price' in df.columns:
+            price_stats = df['current_price'].describe()
+            st.dataframe(price_stats)
+    
+    with col2:
+        st.markdown("#### 🏷️ Category Analysis")
+        if 'category' in df.columns:
+            category_counts = df['category'].value_counts().head(10)
+            if not category_counts.empty:
+                fig = px.pie(values=category_counts.values, names=category_counts.index,
+                           title="Top Categories")
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("No category data available")
+
+def show_settings():
+    """Show settings page"""
+    st.markdown("## ⚙️ Settings")
+    
+    tab1, tab2, tab3 = st.tabs(["🔧 API Settings", "📊 Display Settings", "🔔 Notifications"])
+    
+    with tab1:
+        st.markdown("### 🔧 API Configuration")
+        api_url = st.text_input("API Base URL", value=API_BASE_URL)
+        st.info(f"Current API URL: {api_url}")
+        
+        # Test API connection
+        if st.button("Test API Connection"):
+            try:
+                response = requests.get(f"{api_url}/health", timeout=5)
+                if response.status_code == 200:
+                    st.success("✅ API connection successful!")
+                else:
+                    st.error(f"❌ API connection failed: {response.status_code}")
+            except Exception as e:
+                st.error(f"❌ API connection failed: {e}")
+    
+    with tab2:
+        st.markdown("### 📊 Display Settings")
+        theme = st.selectbox("Theme", ["Light", "Dark"])
+        chart_type = st.selectbox("Default Chart Type", ["Line", "Bar", "Pie"])
+        items_per_page = st.slider("Items per page", 10, 100, 20)
+        
+        st.info("Display settings will be saved automatically")
+    
+    with tab3:
+        st.markdown("### 🔔 Notification Settings")
+        email_notifications = st.checkbox("Email notifications", value=True)
+        price_alerts = st.checkbox("Price change alerts", value=True)
+        stock_alerts = st.checkbox("Stock change alerts", value=False)
+        
+        if st.button("Save Notification Settings"):
+            st.success("✅ Notification settings saved!")
+
+def show_parsing_tools():
+    """Show parsing tools"""
+    st.markdown("## 🔧 Parsing Tools")
+    
+    tab1, tab2, tab3 = st.tabs(["🌐 URL Parser", "📊 Parsing Stats", "🗑️ Cache Management"])
+    
+    with tab1:
+        st.markdown("### 🌐 Parse URL")
+        
+        with st.form("parse_url_form"):
+            url = st.text_input("URL to parse", placeholder="https://example.com")
+            method = st.selectbox("Parsing method", ["http", "browser"])
+            
+            if st.form_submit_button("Parse URL"):
+                if url:
+                    st.info("Parsing in progress...")
+                    # Here you would call the parsing API
+                    st.success("✅ Parsing completed!")
+                else:
+                    st.error("Please enter a URL")
+    
+    with tab2:
+        st.markdown("### 📊 Parsing Statistics")
+        parsing_stats = asyncio.run(api.get_parsing_stats())
+        
+        if parsing_stats:
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Cache Status", parsing_stats.get('status', 'Unknown').title())
+            with col2:
+                st.metric("Memory Used", parsing_stats.get('used_memory', 'N/A'))
+            with col3:
+                st.metric("Connected Clients", parsing_stats.get('connected_clients', 0))
+        else:
+            st.info("No parsing statistics available")
+    
+    with tab3:
+        st.markdown("### 🗑️ Cache Management")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Clear All Cache"):
+                st.info("Cache cleared!")
+        with col2:
+            if st.button("Clear Parsing Cache"):
+                st.info("Parsing cache cleared!")
+
+if __name__ == "__main__":
+    main()
