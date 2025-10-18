@@ -118,7 +118,7 @@ def main():
         st.markdown("## 📊 Navigation")
         page = st.selectbox(
             "Choose a page:",
-            ["📈 Overview", "🛍️ Items Management", "📊 Analytics", "🤖 AI Insights", "🔍 Niche Analysis", "🇷🇺 Russian Marketplaces", "💰 Monetization", "⚙️ Settings", "🔧 Parsing Tools"]
+            ["📈 Overview", "🛍️ Items Management", "📊 Analytics", "🤖 AI Insights", "🔍 Niche Analysis", "🇷🇺 Russian Marketplaces", "👥 Social Features", "💰 Monetization", "⚙️ Settings", "🔧 Parsing Tools"]
         )
         
         st.markdown("## 🔗 Quick Actions")
@@ -141,6 +141,8 @@ def main():
         show_niche_analysis()
     elif page == "🇷🇺 Russian Marketplaces":
         show_russian_marketplaces()
+    elif page == "👥 Social Features":
+        show_social_features()
     elif page == "💰 Monetization":
         show_monetization()
     elif page == "⚙️ Settings":
@@ -1134,6 +1136,12 @@ def show_russian_marketplaces():
     # Import the Russian marketplaces page
     from pages.russian_marketplaces import main as russian_marketplaces_main
     russian_marketplaces_main()
+
+def show_social_features():
+    """Show social features dashboard"""
+    # Import the social features page
+    from pages.social import main as social_main
+    social_main()
 
 def show_monetization():
     """Show monetization dashboard"""

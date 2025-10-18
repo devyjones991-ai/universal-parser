@@ -52,6 +52,14 @@ class User(Base):
     referrals_sent = relationship("Referral", foreign_keys="Referral.referrer_id", back_populates="referrer")
     referrals_received = relationship("Referral", foreign_keys="Referral.referred_id", back_populates="referred")
     
+    # Социальные связи
+    profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    friends = relationship("User", secondary="friendships", primaryjoin="User.id == friendship.c.user_id", secondaryjoin="User.id == friendship.c.friend_id")
+    followers = relationship("User", secondary="follows", primaryjoin="User.id == follows.c.following_id", secondaryjoin="User.id == follows.c.follower_id")
+    following = relationship("User", secondary="follows", primaryjoin="User.id == follows.c.follower_id", secondaryjoin="User.id == follows.c.following_id")
+    groups = relationship("Group", secondary="group_members", back_populates="members")
+    owned_groups = relationship("Group", back_populates="owner")
+    
     def __repr__(self):
         return f"<User(id={self.id}, telegram_id={self.telegram_id}, username={self.username})>"
 
