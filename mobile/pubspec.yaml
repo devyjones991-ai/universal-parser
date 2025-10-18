@@ -62,6 +62,14 @@ dependencies:
   # QR Code
   qr_code_scanner: ^1.0.1
   qr_flutter: ^4.1.0
+  
+  # Phase 2: Enhanced Mobile Features
+  speech_to_text: ^6.5.1
+  connectivity_plus: ^5.0.2
+  workmanager: ^0.5.2
+  flutter_background_service: ^5.0.5
+  vibration: ^1.8.4
+  flutter_ringtone_player: ^0.0.9
 
 dev_dependencies:
   flutter_test:
