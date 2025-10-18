@@ -12,7 +12,7 @@ import logging
 from app.core.config import settings
 from app.core.database import init_db, init_async_db, close_db
 from app.core.cache import cache_service
-from app.api.v1.endpoints import items, parsing, ai, marketplaces, niche_analysis, automation, subscription, payment, russian_marketplaces, social, advanced_analytics, report_scheduler, international, webhooks, websocket, graphql, api_analytics
+from app.api.v1.endpoints import items, parsing, ai, marketplaces, niche_analysis, automation, subscription, payment, russian_marketplaces, social, advanced_analytics, report_scheduler, international, webhooks, websocket, graphql, api_analytics, performance
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -206,6 +206,12 @@ app.include_router(
     api_analytics.router,
     prefix=f"{settings.api_v1_prefix}/analytics",
     tags=["api-analytics"]
+)
+
+app.include_router(
+    performance.router,
+    prefix=f"{settings.api_v1_prefix}/performance",
+    tags=["performance"]
 )
 
 
