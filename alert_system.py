@@ -194,12 +194,77 @@ class MonitoringService:
     
     async def _parse_ozon_item(self, item: TrackedItem) -> Optional[Dict[str, Any]]:
         """Парсинг товара с Ozon"""
-        # TODO: Реализовать парсинг Ozon
+        try:
+            # Используем API Ozon для получения данных товара
+            url = f"https://api.ozon.ru/composer-api.bx/page/json/v2?url={item.url}"
+            
+            async with self.parser as parser:
+                response = await parser.session.get(url, headers={
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Accept': 'application/json',
+                    'Accept-Language': 'ru-RU,ru;q=0.9,en;q=0.8'
+                })
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    # Извлекаем данные из ответа Ozon
+                    product_data = data.get('product', {})
+                    if product_data:
+                        price_info = product_data.get('price', {})
+                        stock_info = product_data.get('stock', {})
+                        
+                        return {
+                            "price": float(price_info.get('price', 0)) if price_info.get('price') else None,
+                            "stock": int(stock_info.get('total', 0)) if stock_info.get('total') else None,
+                            "rating": float(product_data.get('rating', 0)) if product_data.get('rating') else None
+                        }
+                        
+        except Exception as e:
+            logger.error(f"Ошибка парсинга Ozon товара {item.id}: {e}")
+        
         return None
     
     async def _parse_yandex_item(self, item: TrackedItem) -> Optional[Dict[str, Any]]:
         """Парсинг товара с Яндекс.Маркета"""
-        # TODO: Реализовать парсинг Яндекс.Маркета
+        try:
+            # Используем API Яндекс.Маркета для получения данных товара
+            # Извлекаем ID товара из URL
+            import re
+            product_id_match = re.search(r'product/(\d+)', item.url)
+            if not product_id_match:
+                return None
+                
+            product_id = product_id_match.group(1)
+            url = f"https://market.yandex.ru/api/v1/product/{product_id}/info"
+            
+            async with self.parser as parser:
+                response = await parser.session.get(url, headers={
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Accept': 'application/json',
+                    'Accept-Language': 'ru-RU,ru;q=0.9,en;q=0.8'
+                })
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    # Извлекаем данные из ответа Яндекс.Маркета
+                    offers = data.get('offers', [])
+                    if offers:
+                        # Берем первое предложение
+                        offer = offers[0]
+                        price_info = offer.get('price', {})
+                        stock_info = offer.get('stock', {})
+                        
+                        return {
+                            "price": float(price_info.get('value', 0)) if price_info.get('value') else None,
+                            "stock": int(stock_info.get('count', 0)) if stock_info.get('count') else None,
+                            "rating": float(data.get('rating', 0)) if data.get('rating') else None
+                        }
+                        
+        except Exception as e:
+            logger.error(f"Ошибка парсинга Яндекс.Маркет товара {item.id}: {e}")
+        
         return None
     
     async def update_all_tracked_items(self, user_id: int) -> Dict[str, Any]:

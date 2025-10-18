@@ -35,6 +35,19 @@
       "id": "id"
     }
   },
+  "wildberries_simple": {
+    "name": "Wildberries Simple Test",
+    "url": "https://httpbin.org/json",
+    "method": "api",
+    "params": {},
+    "data_path": "",
+    "fields": {
+      "name": "slideshow.title",
+      "price": "slideshow.slides.0.title",
+      "rating": "slideshow.slides.1.title",
+      "id": "slideshow.slides.0.title"
+    }
+  },
   "avito_contacts": {
     "name": "Avito Business Contacts",
     "url": "https://www.avito.ru/rossiya/kommercheskaya_nedvizhimost",

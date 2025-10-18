@@ -129,7 +129,7 @@ async def cmd_parse(message: types.Message):
             if len(text) > 4000:
                 text = text[:3900] + "..."
             
-            await message.reply(f"``````", parse_mode="Markdown")
+            await message.reply(f"```json\n{text}\n```", parse_mode="Markdown")
         else:
             await message.reply("❌ Данные не найдены")
             

@@ -1,28 +1,26 @@
-from pydantic_settings import BaseSettings
 from typing import Optional, List
 import json
 import os
 
-class Settings(BaseSettings):
-    TELEGRAM_BOT_TOKEN: str = ""
-    TELEGRAM_CHAT_ID: int = 0
-    ADMIN_CHAT_IDS: List[int] = []
-    
-    # Настройки парсинга
-    DEFAULT_TIMEOUT: int = 15
-    MAX_CONCURRENT_REQUESTS: int = 10
-    USE_PROXY: bool = False
-    PROXY_URL: Optional[str] = None
-    
-    # Настройки базы
-    DATABASE_URL: str = "sqlite:///universal_parser.db"
-    
-    # Настройки экспорта
-    EXPORT_FORMAT: str = "json"  # json, csv, xlsx
-    MAX_RESULTS_PER_MESSAGE: int = 50
-    
-    class Config:
-        env_file = ".env"
+class Settings:
+    def __init__(self):
+        # Загружаем из переменных окружения
+        self.TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+        self.TELEGRAM_CHAT_ID = int(os.getenv("TELEGRAM_CHAT_ID", "0"))
+        self.ADMIN_CHAT_IDS = json.loads(os.getenv("ADMIN_CHAT_IDS", "[]"))
+        
+        # Настройки парсинга
+        self.DEFAULT_TIMEOUT = int(os.getenv("DEFAULT_TIMEOUT", "15"))
+        self.MAX_CONCURRENT_REQUESTS = int(os.getenv("MAX_CONCURRENT_REQUESTS", "10"))
+        self.USE_PROXY = os.getenv("USE_PROXY", "false").lower() == "true"
+        self.PROXY_URL = os.getenv("PROXY_URL", None)
+        
+        # Настройки базы
+        self.DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///universal_parser.db")
+        
+        # Настройки экспорта
+        self.EXPORT_FORMAT = os.getenv("EXPORT_FORMAT", "json")
+        self.MAX_RESULTS_PER_MESSAGE = int(os.getenv("MAX_RESULTS_PER_MESSAGE", "50"))
 
 def load_parsing_profiles():
     """Загружает профили парсинга из JSON"""

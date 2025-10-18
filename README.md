@@ -1,6 +1,10 @@
-# Universal Parser - Платформа мониторинга маркетплейсов
+# Universal Parser v0.1.0
 
 🚀 **Мощная платформа для отслеживания товаров, цен и аналитики на маркетплейсах**
+
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/your-username/universal-parser)
+[![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
+[![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
 ## 🎯 Основные возможности
 
