@@ -118,7 +118,7 @@ def main():
         st.markdown("## 📊 Navigation")
         page = st.selectbox(
             "Choose a page:",
-            ["📈 Overview", "🛍️ Items Management", "📊 Analytics", "📊 Advanced Analytics", "📅 Report Scheduler", "🤖 AI Insights", "🔍 Niche Analysis", "🇷🇺 Russian Marketplaces", "👥 Social Features", "💰 Monetization", "⚙️ Settings", "🔧 Parsing Tools"]
+            ["📈 Overview", "🛍️ Items Management", "📊 Analytics", "📊 Advanced Analytics", "📅 Report Scheduler", "🌍 International", "🤖 AI Insights", "🔍 Niche Analysis", "🇷🇺 Russian Marketplaces", "👥 Social Features", "💰 Monetization", "⚙️ Settings", "🔧 Parsing Tools"]
         )
         
         st.markdown("## 🔗 Quick Actions")
@@ -139,6 +139,8 @@ def main():
         show_advanced_analytics()
     elif page == "📅 Report Scheduler":
         show_report_scheduler()
+    elif page == "🌍 International":
+        show_international()
     elif page == "🤖 AI Insights":
         show_ai_insights()
     elif page == "🔍 Niche Analysis":
@@ -1152,6 +1154,12 @@ def show_report_scheduler():
     # Import the report scheduler page
     from pages.report_scheduler import main as report_scheduler_main
     report_scheduler_main()
+
+def show_international():
+    """Show international dashboard"""
+    # Import the international page
+    from pages.international import main as international_main
+    international_main()
 
 def show_social_features():
     """Show social features dashboard"""

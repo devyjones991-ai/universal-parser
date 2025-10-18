@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     
     # Основные настройки
     app_name: str = "Universal Parser"
-    app_version: str = "0.7.0"
+    app_version: str = "0.8.0"
     debug: bool = False
     
     # API настройки
