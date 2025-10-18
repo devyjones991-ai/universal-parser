@@ -287,7 +287,11 @@ def show_items_management():
             col1, col2 = st.columns(2)
             with col1:
                 item_id = st.text_input("Item ID", placeholder="Enter item ID from marketplace")
-                marketplace = st.selectbox("Marketplace", ["wildberries", "ozon", "yandex"])
+                marketplace = st.selectbox("Marketplace", [
+                    "wildberries", "ozon", "yandex", 
+                    "aliexpress", "amazon", "ebay",
+                    "lamoda", "dns"
+                ])
                 name = st.text_input("Item Name", placeholder="Enter item name")
             with col2:
                 brand = st.text_input("Brand", placeholder="Enter brand name")

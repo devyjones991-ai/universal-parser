@@ -12,7 +12,7 @@ import logging
 from app.core.config import settings
 from app.core.database import init_db, init_async_db, close_db
 from app.core.cache import cache_service
-from app.api.v1.endpoints import items, parsing, ai
+from app.api.v1.endpoints import items, parsing, ai, marketplaces
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -122,6 +122,12 @@ app.include_router(
     ai.router,
     prefix=f"{settings.api_v1_prefix}/ai",
     tags=["ai"]
+)
+
+app.include_router(
+    marketplaces.router,
+    prefix=f"{settings.api_v1_prefix}/marketplaces",
+    tags=["marketplaces"]
 )
 
 

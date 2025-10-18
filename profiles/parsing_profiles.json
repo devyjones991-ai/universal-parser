@@ -59,5 +59,194 @@
       "location": "[data-marker='item-address']"
     },
     "use_browser": true
+  },
+  "aliexpress": {
+    "name": "AliExpress",
+    "base_url": "https://www.aliexpress.com",
+    "search_url": "https://www.aliexpress.com/wholesale?SearchText={query}",
+    "item_url": "https://www.aliexpress.com/item/{item_id}.html",
+    "method": "html_dynamic",
+    "selectors": {
+      "title": "h1[data-pl='product-title']",
+      "price": ".notranslate",
+      "old_price": ".notranslate.original-price",
+      "rating": ".overview-rating-average",
+      "reviews_count": ".product-reviewer-reviews",
+      "stock": ".product-quantity-tip",
+      "images": ".images-view-item img",
+      "description": ".product-description",
+      "specifications": ".product-property-list",
+      "seller": ".seller-name",
+      "shipping": ".shipping-info"
+    },
+    "headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      "Accept-Language": "en-US,en;q=0.9"
+    },
+    "wait_for": "h1[data-pl='product-title']",
+    "timeout": 20,
+    "use_browser": true
+  },
+  "amazon": {
+    "name": "Amazon",
+    "base_url": "https://www.amazon.com",
+    "search_url": "https://www.amazon.com/s?k={query}",
+    "item_url": "https://www.amazon.com/dp/{item_id}",
+    "method": "html_dynamic",
+    "selectors": {
+      "title": "#productTitle",
+      "price": ".a-price-whole",
+      "old_price": ".a-text-strike",
+      "rating": ".a-icon-alt",
+      "reviews_count": "#acrCustomerReviewText",
+      "stock": "#availability span",
+      "images": "#landingImage",
+      "description": "#feature-bullets ul",
+      "specifications": "#productDetails_techSpec_section_1",
+      "seller": "#sellerProfileTriggerId",
+      "shipping": ".a-color-secondary"
+    },
+    "headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      "Accept-Language": "en-US,en;q=0.9"
+    },
+    "wait_for": "#productTitle",
+    "timeout": 20,
+    "use_browser": true
+  },
+  "ebay": {
+    "name": "eBay",
+    "base_url": "https://www.ebay.com",
+    "search_url": "https://www.ebay.com/sch/i.html?_nkw={query}",
+    "item_url": "https://www.ebay.com/itm/{item_id}",
+    "method": "html_dynamic",
+    "selectors": {
+      "title": "#x-title-label-lbl",
+      "price": ".notranslate",
+      "old_price": ".u-flL.condText",
+      "rating": ".review--rating",
+      "reviews_count": ".review--count",
+      "stock": ".qtyTxt",
+      "images": "#icImg",
+      "description": "#desc_div",
+      "specifications": ".u-flL.condText",
+      "seller": ".mbg-nw",
+      "shipping": ".u-flL.condText"
+    },
+    "headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      "Accept-Language": "en-US,en;q=0.9"
+    },
+    "wait_for": "#x-title-label-lbl",
+    "timeout": 20,
+    "use_browser": true
+  },
+  "lamoda": {
+    "name": "Lamoda",
+    "base_url": "https://www.lamoda.ru",
+    "search_url": "https://www.lamoda.ru/catalogsearch/result/?q={query}",
+    "item_url": "https://www.lamoda.ru/p/{item_id}",
+    "method": "html_dynamic",
+    "selectors": {
+      "title": ".product__title",
+      "price": ".product__price-current",
+      "old_price": ".product__price-old",
+      "rating": ".product__rating",
+      "reviews_count": ".product__reviews-count",
+      "stock": ".product__sizes",
+      "images": ".product__gallery img",
+      "description": ".product__description",
+      "specifications": ".product__specifications",
+      "brand": ".product__brand",
+      "category": ".breadcrumbs__item"
+    },
+    "headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      "Accept-Language": "ru-RU,ru;q=0.9"
+    },
+    "wait_for": ".product__title",
+    "timeout": 15,
+    "use_browser": true
+  },
+  "dns": {
+    "name": "DNS",
+    "base_url": "https://www.dns-shop.ru",
+    "search_url": "https://www.dns-shop.ru/search/?q={query}",
+    "item_url": "https://www.dns-shop.ru/product/{item_id}",
+    "method": "html_dynamic",
+    "selectors": {
+      "title": ".product-card-top__title",
+      "price": ".product-buy__price",
+      "old_price": ".product-buy__price-old",
+      "rating": ".product-card-top__rating",
+      "reviews_count": ".product-card-top__reviews",
+      "stock": ".product-buy__btn",
+      "images": ".product-card-top__image img",
+      "description": ".product-card-description",
+      "specifications": ".product-card-specifications",
+      "brand": ".product-card-top__brand",
+      "category": ".breadcrumbs__item"
+    },
+    "headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      "Accept-Language": "ru-RU,ru;q=0.9"
+    },
+    "wait_for": ".product-card-top__title",
+    "timeout": 15,
+    "use_browser": true
+  },
+  "ozon": {
+    "name": "Ozon",
+    "base_url": "https://www.ozon.ru",
+    "search_url": "https://www.ozon.ru/search/?text={query}",
+    "item_url": "https://www.ozon.ru/product/{item_id}",
+    "method": "html_dynamic",
+    "selectors": {
+      "title": "h1",
+      "price": ".tsBody500Medium",
+      "old_price": ".tsBodyControl400Small",
+      "rating": ".tsBodyMBold",
+      "reviews_count": ".tsBodyMBold",
+      "stock": ".tsBody500Medium",
+      "images": "img[data-widget='webGallery']",
+      "description": ".tsBodyL",
+      "specifications": ".tsBodyL",
+      "brand": ".tsBody500Medium",
+      "category": ".tsBody500Medium"
+    },
+    "headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      "Accept-Language": "ru-RU,ru;q=0.9"
+    },
+    "wait_for": "h1",
+    "timeout": 15,
+    "use_browser": true
+  },
+  "yandex_market": {
+    "name": "Yandex Market",
+    "base_url": "https://market.yandex.ru",
+    "search_url": "https://market.yandex.ru/search?text={query}",
+    "item_url": "https://market.yandex.ru/product/{item_id}",
+    "method": "html_dynamic",
+    "selectors": {
+      "title": "h1",
+      "price": ".price",
+      "old_price": ".price-old",
+      "rating": ".rating",
+      "reviews_count": ".reviews-count",
+      "stock": ".stock",
+      "images": ".gallery img",
+      "description": ".description",
+      "specifications": ".specifications",
+      "brand": ".brand",
+      "category": ".breadcrumbs"
+    },
+    "headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      "Accept-Language": "ru-RU,ru;q=0.9"
+    },
+    "wait_for": "h1",
+    "timeout": 15,
+    "use_browser": true
   }
 }

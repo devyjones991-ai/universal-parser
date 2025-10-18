@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright, Browser, Page
 from app.core.cache import cache_service, cached
 from app.core.config import settings
+from app.services.marketplace_parsers import get_parser
 import logging
 
 logger = logging.getLogger(__name__)
@@ -254,6 +255,8 @@ class EnhancedParsingService:
             result = await self._parse_ozon_item(item_id)
         elif marketplace == "yandex":
             result = await self._parse_yandex_item(item_id)
+        elif marketplace in ["aliexpress", "amazon", "ebay", "lamoda", "dns"]:
+            result = await self._parse_new_marketplace_item(marketplace, item_id)
         else:
             logger.warning(f"Unknown marketplace: {marketplace}")
             return None
@@ -317,6 +320,51 @@ class EnhancedParsingService:
             logger.error(f"Error parsing Yandex item {item_id}: {e}")
         
         return None
+    
+    async def _parse_new_marketplace_item(self, marketplace: str, item_id: str) -> Optional[Dict[str, Any]]:
+        """Parse new marketplace item using specialized parsers"""
+        try:
+            # Load parsing profiles
+            from app.core.config import parsing_profiles
+            
+            if marketplace not in parsing_profiles:
+                logger.error(f"No parsing profile found for marketplace: {marketplace}")
+                return None
+            
+            config = parsing_profiles[marketplace]
+            
+            # Build URL
+            if 'item_url' in config:
+                url = config['item_url'].format(item_id=item_id)
+            else:
+                logger.error(f"No item_url template found for marketplace: {marketplace}")
+                return None
+            
+            # Parse using appropriate method
+            if config.get('method') == 'html_dynamic' or config.get('use_browser', False):
+                # Use browser for dynamic content
+                result = await self._parse_with_browser(url)
+            else:
+                # Use HTTP requests
+                result = await self._parse_with_http(url)
+            
+            if not result or len(result) == 0:
+                return None
+            
+            # Use specialized parser for the marketplace
+            parser = get_parser(marketplace, config)
+            parsed_data = parser.parse_item(result[0].get('data', ''), url)
+            
+            return {
+                "marketplace": marketplace,
+                "item_id": item_id,
+                "url": url,
+                "data": parsed_data
+            }
+            
+        except Exception as e:
+            logger.error(f"Error parsing {marketplace} item {item_id}: {e}")
+            return None
     
     async def get_cache_stats(self) -> Dict[str, Any]:
         """Get parsing cache statistics"""
