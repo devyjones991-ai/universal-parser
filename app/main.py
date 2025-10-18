@@ -12,7 +12,7 @@ import logging
 from app.core.config import settings
 from app.core.database import init_db, init_async_db, close_db
 from app.core.cache import cache_service
-from app.api.v1.endpoints import items, parsing, ai, marketplaces, niche_analysis, automation, subscription, payment
+from app.api.v1.endpoints import items, parsing, ai, marketplaces, niche_analysis, automation, subscription, payment, russian_marketplaces
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -152,6 +152,12 @@ app.include_router(
     payment.router,
     prefix=f"{settings.api_v1_prefix}/payment",
     tags=["payment"]
+)
+
+app.include_router(
+    russian_marketplaces.router,
+    prefix=f"{settings.api_v1_prefix}/russian-marketplaces",
+    tags=["russian-marketplaces"]
 )
 
 

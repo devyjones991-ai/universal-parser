@@ -118,7 +118,7 @@ def main():
         st.markdown("## 📊 Navigation")
         page = st.selectbox(
             "Choose a page:",
-            ["📈 Overview", "🛍️ Items Management", "📊 Analytics", "🤖 AI Insights", "🔍 Niche Analysis", "💰 Monetization", "⚙️ Settings", "🔧 Parsing Tools"]
+            ["📈 Overview", "🛍️ Items Management", "📊 Analytics", "🤖 AI Insights", "🔍 Niche Analysis", "🇷🇺 Russian Marketplaces", "💰 Monetization", "⚙️ Settings", "🔧 Parsing Tools"]
         )
         
         st.markdown("## 🔗 Quick Actions")
@@ -139,6 +139,8 @@ def main():
         show_ai_insights()
     elif page == "🔍 Niche Analysis":
         show_niche_analysis()
+    elif page == "🇷🇺 Russian Marketplaces":
+        show_russian_marketplaces()
     elif page == "💰 Monetization":
         show_monetization()
     elif page == "⚙️ Settings":
@@ -1126,6 +1128,12 @@ def show_parsing_tools():
         with col2:
             if st.button("Clear Parsing Cache"):
                 st.info("Parsing cache cleared!")
+
+def show_russian_marketplaces():
+    """Show Russian marketplaces dashboard"""
+    # Import the Russian marketplaces page
+    from pages.russian_marketplaces import main as russian_marketplaces_main
+    russian_marketplaces_main()
 
 def show_monetization():
     """Show monetization dashboard"""

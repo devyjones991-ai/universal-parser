@@ -15,7 +15,9 @@
   },
   "wildberries_search": {
     "name": "Wildberries Search",
-    "url": "https://search.wb.ru/exactmatch/ru/common/v4/search",
+    "base_url": "https://www.wildberries.ru",
+    "search_url": "https://search.wb.ru/exactmatch/ru/common/v4/search",
+    "item_url": "https://www.wildberries.ru/catalog/{id}/detail.aspx",
     "method": "api",
     "params": {
       "appType": "1",
@@ -25,14 +27,63 @@
       "resultset": "catalog",
       "sort": "popular",
       "spp": "27",
-      "suppressSpellcheck": "false"
+      "suppressSpellcheck": "false",
+      "page": "{page}",
+      "limit": "100"
     },
     "data_path": "data.products",
-    "fields": {
-      "name": "name",
+    "selectors": {
+      "title": "name",
       "price": "priceU",
+      "old_price": "priceU",
       "rating": "reviewRating",
-      "id": "id"
+      "reviews_count": "feedbacks",
+      "stock": "totalQuantity",
+      "images": "pics",
+      "description": "description",
+      "brand": "brand",
+      "category": "subj_name",
+      "seller": "supplier",
+      "seller_rating": "supplierRating",
+      "discount": "sale",
+      "colors": "colors",
+      "sizes": "sizes",
+      "characteristics": "nomenclatures",
+      "delivery": "delivery",
+      "pickup": "pickup",
+      "warranty": "warranty"
+    },
+    "headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Accept": "application/json, text/plain, */*",
+      "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8",
+      "Referer": "https://www.wildberries.ru/",
+      "Origin": "https://www.wildberries.ru"
+    },
+    "wait_for": null,
+    "timeout": 30,
+    "use_browser": false,
+    "categories": {
+      "electronics": "Электроника",
+      "clothing": "Одежда",
+      "shoes": "Обувь",
+      "home": "Дом и сад",
+      "beauty": "Красота и здоровье",
+      "sports": "Спорт и отдых",
+      "auto": "Автотовары",
+      "kids": "Детские товары",
+      "books": "Книги",
+      "food": "Продукты питания"
+    },
+    "filters": {
+      "price_min": "priceU",
+      "price_max": "priceU",
+      "brand": "brand",
+      "rating": "reviewRating",
+      "discount": "sale",
+      "in_stock": "totalQuantity",
+      "delivery": "delivery",
+      "pickup": "pickup"
     }
   },
   "wildberries_simple": {
@@ -239,14 +290,238 @@
       "description": ".description",
       "specifications": ".specifications",
       "brand": ".brand",
-      "category": ".breadcrumbs"
+      "category": ".breadcrumbs",
+      "seller": ".seller",
+      "seller_rating": ".seller-rating",
+      "delivery": ".delivery",
+      "pickup": ".pickup",
+      "warranty": ".warranty",
+      "discount": ".discount",
+      "colors": ".colors",
+      "sizes": ".sizes"
     },
     "headers": {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-      "Accept-Language": "ru-RU,ru;q=0.9"
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+      "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8",
+      "Accept-Encoding": "gzip, deflate, br",
+      "Referer": "https://market.yandex.ru/",
+      "Upgrade-Insecure-Requests": "1"
     },
     "wait_for": "h1",
     "timeout": 15,
-    "use_browser": true
+    "use_browser": true,
+    "categories": {
+      "electronics": "Электроника",
+      "computers": "Компьютеры",
+      "phones": "Телефоны",
+      "home": "Дом и дача",
+      "clothing": "Одежда",
+      "shoes": "Обувь",
+      "beauty": "Красота и здоровье",
+      "sports": "Спорт и отдых",
+      "auto": "Автотовары",
+      "kids": "Детские товары",
+      "books": "Книги",
+      "food": "Продукты питания"
+    },
+    "filters": {
+      "price_min": "price",
+      "price_max": "price",
+      "brand": "brand",
+      "rating": "rating",
+      "discount": "discount",
+      "in_stock": "stock",
+      "delivery": "delivery",
+      "pickup": "pickup"
+    }
+  },
+  "avito": {
+    "name": "Avito",
+    "base_url": "https://www.avito.ru",
+    "search_url": "https://www.avito.ru/{region}/q/{search_term}",
+    "item_url": "https://www.avito.ru/{region}/obyavlenie/{id}",
+    "method": "html",
+    "selectors": {
+      "title": "[data-marker='item-title'] h3",
+      "price": "[data-marker='item-price']",
+      "description": "[data-marker='item-description']",
+      "images": "[data-marker='image-frame'] img",
+      "location": "[data-marker='item-address']",
+      "seller": "[data-marker='seller-info']",
+      "seller_rating": "[data-marker='seller-rating']",
+      "views": "[data-marker='item-views']",
+      "date": "[data-marker='item-date']",
+      "category": "[data-marker='breadcrumbs']",
+      "condition": "[data-marker='item-condition']",
+      "characteristics": "[data-marker='item-characteristics']",
+      "phone": "[data-marker='phone']",
+      "favorites": "[data-marker='favorites']"
+    },
+    "headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+      "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8",
+      "Accept-Encoding": "gzip, deflate, br",
+      "Referer": "https://www.avito.ru/",
+      "Upgrade-Insecure-Requests": "1"
+    },
+    "wait_for": "[data-marker='item-title']",
+    "timeout": 30,
+    "use_browser": true,
+    "categories": {
+      "real_estate": "Недвижимость",
+      "cars": "Транспорт",
+      "electronics": "Электроника",
+      "clothing": "Одежда и обувь",
+      "home": "Дом и дача",
+      "beauty": "Красота и здоровье",
+      "sports": "Спорт и отдых",
+      "kids": "Детские товары",
+      "animals": "Животные",
+      "services": "Услуги",
+      "work": "Работа",
+      "business": "Готовый бизнес"
+    },
+    "filters": {
+      "price_min": "price",
+      "price_max": "price",
+      "region": "region",
+      "category": "category",
+      "condition": "condition",
+      "seller_type": "seller_type",
+      "with_photo": "with_photo",
+      "urgent": "urgent"
+    }
+  },
+  "mvideo": {
+    "name": "М.Видео",
+    "base_url": "https://www.mvideo.ru",
+    "search_url": "https://www.mvideo.ru/api/mobile/catalog/search",
+    "item_url": "https://www.mvideo.ru/products/{id}",
+    "method": "api",
+    "params": {
+      "query": "{search_term}",
+      "page": "{page}",
+      "limit": "24",
+      "sort": "popularity"
+    },
+    "data_path": "body.products",
+    "selectors": {
+      "title": "name",
+      "price": "price",
+      "old_price": "oldPrice",
+      "rating": "rating",
+      "reviews_count": "reviewsCount",
+      "stock": "stock",
+      "images": "images",
+      "description": "description",
+      "brand": "brand",
+      "category": "category",
+      "characteristics": "characteristics",
+      "warranty": "warranty",
+      "delivery": "delivery",
+      "pickup": "pickup",
+      "discount": "discount",
+      "colors": "colors",
+      "sizes": "sizes"
+    },
+    "headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Accept": "application/json, text/plain, */*",
+      "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8",
+      "Referer": "https://www.mvideo.ru/",
+      "Origin": "https://www.mvideo.ru"
+    },
+    "wait_for": null,
+    "timeout": 30,
+    "use_browser": false,
+    "categories": {
+      "smartphones": "Смартфоны",
+      "laptops": "Ноутбуки",
+      "tablets": "Планшеты",
+      "tv": "Телевизоры",
+      "audio": "Аудио",
+      "gaming": "Игровые консоли",
+      "home_appliances": "Бытовая техника",
+      "computers": "Компьютеры",
+      "accessories": "Аксессуары",
+      "smart_home": "Умный дом"
+    },
+    "filters": {
+      "price_min": "price",
+      "price_max": "price",
+      "brand": "brand",
+      "rating": "rating",
+      "discount": "discount",
+      "in_stock": "stock",
+      "delivery": "delivery",
+      "pickup": "pickup"
+    }
+  },
+  "eldorado": {
+    "name": "Эльдорадо",
+    "base_url": "https://www.eldorado.ru",
+    "search_url": "https://www.eldorado.ru/api/search",
+    "item_url": "https://www.eldorado.ru/cat/detail/{id}",
+    "method": "api",
+    "params": {
+      "q": "{search_term}",
+      "page": "{page}",
+      "limit": "24",
+      "sort": "popularity"
+    },
+    "data_path": "data.products",
+    "selectors": {
+      "title": "name",
+      "price": "price",
+      "old_price": "oldPrice",
+      "rating": "rating",
+      "reviews_count": "reviewsCount",
+      "stock": "stock",
+      "images": "images",
+      "description": "description",
+      "brand": "brand",
+      "category": "category",
+      "characteristics": "characteristics",
+      "warranty": "warranty",
+      "delivery": "delivery",
+      "pickup": "pickup",
+      "discount": "discount",
+      "colors": "colors",
+      "sizes": "sizes"
+    },
+    "headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Accept": "application/json, text/plain, */*",
+      "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8",
+      "Referer": "https://www.eldorado.ru/",
+      "Origin": "https://www.eldorado.ru"
+    },
+    "wait_for": null,
+    "timeout": 30,
+    "use_browser": false,
+    "categories": {
+      "smartphones": "Смартфоны",
+      "laptops": "Ноутбуки",
+      "tablets": "Планшеты",
+      "tv": "Телевизоры",
+      "audio": "Аудио",
+      "gaming": "Игровые консоли",
+      "home_appliances": "Бытовая техника",
+      "computers": "Компьютеры",
+      "accessories": "Аксессуары",
+      "smart_home": "Умный дом"
+    },
+    "filters": {
+      "price_min": "price",
+      "price_max": "price",
+      "brand": "brand",
+      "rating": "rating",
+      "discount": "discount",
+      "in_stock": "stock",
+      "delivery": "delivery",
+      "pickup": "pickup"
+    }
   }
 }
