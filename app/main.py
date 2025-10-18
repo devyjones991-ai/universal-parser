@@ -12,7 +12,7 @@ import logging
 from app.core.config import settings
 from app.core.database import init_db, init_async_db, close_db
 from app.core.cache import cache_service
-from app.api.v1.endpoints import items, parsing, ai, marketplaces
+from app.api.v1.endpoints import items, parsing, ai, marketplaces, niche_analysis
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -128,6 +128,12 @@ app.include_router(
     marketplaces.router,
     prefix=f"{settings.api_v1_prefix}/marketplaces",
     tags=["marketplaces"]
+)
+
+app.include_router(
+    niche_analysis.router,
+    prefix=f"{settings.api_v1_prefix}/niche-analysis",
+    tags=["niche-analysis"]
 )
 
 

@@ -118,7 +118,7 @@ def main():
         st.markdown("## 📊 Navigation")
         page = st.selectbox(
             "Choose a page:",
-            ["📈 Overview", "🛍️ Items Management", "📊 Analytics", "🤖 AI Insights", "⚙️ Settings", "🔧 Parsing Tools"]
+            ["📈 Overview", "🛍️ Items Management", "📊 Analytics", "🤖 AI Insights", "🔍 Niche Analysis", "⚙️ Settings", "🔧 Parsing Tools"]
         )
         
         st.markdown("## 🔗 Quick Actions")
@@ -137,6 +137,8 @@ def main():
         show_analytics()
     elif page == "🤖 AI Insights":
         show_ai_insights()
+    elif page == "🔍 Niche Analysis":
+        show_niche_analysis()
     elif page == "⚙️ Settings":
         show_settings()
     elif page == "🔧 Parsing Tools":
@@ -706,6 +708,374 @@ def show_ai_insights():
         with col2:
             if st.button("🗑️ Clear Models"):
                 st.warning("⚠️ All models cleared!")
+
+
+def show_niche_analysis():
+    """Show niche analysis for beginners"""
+    st.markdown("## 🔍 Niche Analysis for Beginners")
+    
+    # Tabs for different analysis features
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "🎯 Niche Analysis", 
+        "🏪 Supplier Finder", 
+        "💰 Pricing Advisor", 
+        "📊 Profit Calculator", 
+        "📚 Beginner Guide"
+    ])
+    
+    with tab1:
+        st.markdown("### 🎯 Analyze a Niche")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            niche = st.selectbox(
+                "Select a niche:",
+                ["electronics", "fashion", "beauty_health", "home_garden", 
+                 "sports_outdoors", "toys_games", "automotive", "books_media"]
+            )
+        with col2:
+            keywords = st.text_area(
+                "Enter keywords (one per line):",
+                value="smartphone\nheadphones\nlaptop",
+                height=100
+            ).split('\n')
+        
+        if st.button("🔍 Analyze Niche"):
+            with st.spinner("Analyzing niche..."):
+                # Mock analysis data
+                analysis_data = {
+                    'niche': niche,
+                    'competition_level': 0.7,
+                    'market_size': 1500000,
+                    'average_price': 299.99,
+                    'min_price': 49.99,
+                    'max_price': 999.99,
+                    'demand_trend': 'growing',
+                    'seasonality': 0.3,
+                    'profit_margin': 0.25,
+                    'difficulty': 'medium',
+                    'growth_potential': 0.8,
+                    'recommendation_score': 0.75
+                }
+                
+                st.success("✅ Analysis completed!")
+                
+                # Display metrics
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.metric("Competition", f"{analysis_data['competition_level']:.1%}", "High")
+                with col2:
+                    st.metric("Market Size", f"${analysis_data['market_size']:,.0f}")
+                with col3:
+                    st.metric("Avg Price", f"${analysis_data['average_price']:.2f}")
+                with col4:
+                    st.metric("Profit Margin", f"{analysis_data['profit_margin']:.1%}")
+                
+                # Detailed analysis
+                st.markdown("#### 📊 Detailed Analysis")
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown("**Price Range:**")
+                    st.write(f"${analysis_data['min_price']:.2f} - ${analysis_data['max_price']:.2f}")
+                    
+                    st.markdown("**Demand Trend:**")
+                    trend_icon = "📈" if analysis_data['demand_trend'] == 'growing' else "📉"
+                    st.write(f"{trend_icon} {analysis_data['demand_trend'].title()}")
+                    
+                with col2:
+                    st.markdown("**Difficulty Level:**")
+                    difficulty_colors = {
+                        'easy': '🟢',
+                        'medium': '🟡', 
+                        'hard': '🟠',
+                        'expert': '🔴'
+                    }
+                    st.write(f"{difficulty_colors.get(analysis_data['difficulty'], '❓')} {analysis_data['difficulty'].title()}")
+                    
+                    st.markdown("**Growth Potential:**")
+                    st.write(f"📊 {analysis_data['growth_potential']:.1%}")
+                
+                # Recommendation
+                st.markdown("#### 💡 Recommendation")
+                if analysis_data['recommendation_score'] > 0.7:
+                    st.success("🎉 **Excellent choice!** This niche has great potential for beginners.")
+                elif analysis_data['recommendation_score'] > 0.5:
+                    st.warning("⚠️ **Good choice** with some challenges. Consider your experience level.")
+                else:
+                    st.error("❌ **Challenging niche** - not recommended for beginners.")
+    
+    with tab2:
+        st.markdown("### 🏪 Find Suppliers")
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            product_name = st.text_input("Product Name", value="Wireless Headphones")
+        with col2:
+            category = st.selectbox("Category", ["electronics", "fashion", "beauty_health"])
+        with col3:
+            budget = st.number_input("Budget per Unit ($)", value=50.0, min_value=1.0)
+        
+        if st.button("🔍 Find Suppliers"):
+            with st.spinner("Searching suppliers..."):
+                # Mock supplier data
+                suppliers = [
+                    {
+                        'name': 'TechGlobal Manufacturing',
+                        'type': 'Manufacturer',
+                        'country': 'China',
+                        'min_order': 100,
+                        'price_per_unit': 25.0,
+                        'shipping': 5.0,
+                        'delivery_days': 14,
+                        'quality_rating': 4.2,
+                        'total_cost': 30.0
+                    },
+                    {
+                        'name': 'ElectroWholesale',
+                        'type': 'Wholesaler',
+                        'country': 'USA',
+                        'min_order': 50,
+                        'price_per_unit': 35.0,
+                        'shipping': 8.0,
+                        'delivery_days': 7,
+                        'quality_rating': 4.0,
+                        'total_cost': 43.0
+                    }
+                ]
+                
+                st.success(f"✅ Found {len(suppliers)} suppliers!")
+                
+                for i, supplier in enumerate(suppliers):
+                    with st.expander(f"🏭 {supplier['name']} ({supplier['type']})"):
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.write(f"**Country:** {supplier['country']}")
+                            st.write(f"**Min Order:** {supplier['min_order']} units")
+                        with col2:
+                            st.write(f"**Price:** ${supplier['price_per_unit']:.2f}/unit")
+                            st.write(f"**Shipping:** ${supplier['shipping']:.2f}")
+                        with col3:
+                            st.write(f"**Delivery:** {supplier['delivery_days']} days")
+                            st.write(f"**Quality:** {supplier['quality_rating']}/5")
+                        
+                        st.write(f"**Total Cost:** ${supplier['total_cost']:.2f}/unit")
+                        
+                        if supplier['total_cost'] <= budget:
+                            st.success("✅ Within budget!")
+                        else:
+                            st.warning("⚠️ Over budget")
+    
+    with tab3:
+        st.markdown("### 💰 Pricing Advisor")
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            product_name = st.text_input("Product Name", value="Smart Watch", key="pricing_product")
+        with col2:
+            category = st.selectbox("Category", ["electronics", "fashion", "beauty_health"], key="pricing_category")
+        with col3:
+            supplier_cost = st.number_input("Supplier Cost ($)", value=30.0, min_value=0.1)
+        
+        target_margin = st.slider("Target Profit Margin (%)", 10, 80, 30) / 100
+        
+        if st.button("💰 Calculate Pricing"):
+            with st.spinner("Calculating optimal pricing..."):
+                # Mock pricing calculation
+                recommended_price = supplier_cost / (1 - target_margin)
+                min_price = recommended_price * 0.8
+                max_price = recommended_price * 1.2
+                
+                st.success("✅ Pricing calculated!")
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Recommended Price", f"${recommended_price:.2f}")
+                with col2:
+                    st.metric("Min Price", f"${min_price:.2f}")
+                with col3:
+                    st.metric("Max Price", f"${max_price:.2f}")
+                
+                # Pricing strategy
+                st.markdown("#### 📊 Pricing Strategy")
+                if recommended_price < 50:
+                    strategy = "Budget pricing - compete on price"
+                    position = "budget"
+                elif recommended_price < 200:
+                    strategy = "Mid-range pricing - balanced approach"
+                    position = "mid-range"
+                else:
+                    strategy = "Premium pricing - compete on quality"
+                    position = "premium"
+                
+                st.info(f"**Market Position:** {position.title()}")
+                st.info(f"**Strategy:** {strategy}")
+                
+                # Profit analysis
+                profit_per_unit = recommended_price - supplier_cost
+                actual_margin = profit_per_unit / recommended_price
+                
+                st.markdown("#### 💵 Profit Analysis")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.write(f"**Profit per Unit:** ${profit_per_unit:.2f}")
+                    st.write(f"**Actual Margin:** {actual_margin:.1%}")
+                with col2:
+                    st.write(f"**Target Margin:** {target_margin:.1%}")
+                    if actual_margin >= target_margin:
+                        st.success("✅ Target achieved!")
+                    else:
+                        st.warning("⚠️ Below target")
+    
+    with tab4:
+        st.markdown("### 📊 Profit Calculator")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            product_name = st.text_input("Product Name", value="Bluetooth Speaker", key="profit_product")
+            supplier_cost = st.number_input("Supplier Cost ($)", value=20.0, min_value=0.1)
+            selling_price = st.number_input("Selling Price ($)", value=49.99, min_value=0.1)
+        with col2:
+            marketplace_fees = st.slider("Marketplace Fees (%)", 5, 20, 10) / 100
+            shipping_cost = st.number_input("Shipping Cost ($)", value=3.0, min_value=0.0)
+            other_costs = st.number_input("Other Costs ($)", value=2.0, min_value=0.0)
+        
+        if st.button("📊 Calculate Profit"):
+            # Calculate costs
+            total_costs = supplier_cost + shipping_cost + other_costs
+            marketplace_fee_amount = selling_price * marketplace_fees
+            total_costs += marketplace_fee_amount
+            
+            # Calculate profit
+            profit_per_unit = selling_price - total_costs
+            profit_margin = (profit_per_unit / selling_price) * 100 if selling_price > 0 else 0
+            
+            # Break-even
+            break_even_price = total_costs / (1 - marketplace_fees) if marketplace_fees < 1 else total_costs
+            
+            st.success("✅ Profit calculated!")
+            
+            # Display results
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Profit per Unit", f"${profit_per_unit:.2f}")
+            with col2:
+                st.metric("Profit Margin", f"{profit_margin:.1f}%")
+            with col3:
+                st.metric("Total Costs", f"${total_costs:.2f}")
+            with col4:
+                st.metric("Break-even Price", f"${break_even_price:.2f}")
+            
+            # Cost breakdown
+            st.markdown("#### 💸 Cost Breakdown")
+            cost_breakdown = {
+                "Supplier Cost": supplier_cost,
+                "Shipping Cost": shipping_cost,
+                "Marketplace Fees": marketplace_fee_amount,
+                "Other Costs": other_costs
+            }
+            
+            for cost_type, amount in cost_breakdown.items():
+                st.write(f"**{cost_type}:** ${amount:.2f}")
+            
+            # Recommendations
+            st.markdown("#### 💡 Recommendations")
+            if profit_margin >= 50:
+                st.success("🎉 Excellent margin! Consider scaling up.")
+            elif profit_margin >= 30:
+                st.info("👍 Good margin, room for improvement.")
+            elif profit_margin >= 15:
+                st.warning("⚠️ Low margin, consider price optimization.")
+            else:
+                st.error("❌ Very low margin, reconsider this product.")
+    
+    with tab5:
+        st.markdown("### 📚 Beginner Guide")
+        
+        experience_level = st.selectbox(
+            "Your Experience Level:",
+            ["Complete Beginner", "Some Experience", "Experienced"]
+        )
+        
+        budget = st.number_input("Your Budget ($)", value=1000.0, min_value=100.0)
+        
+        if st.button("📚 Get Personalized Guide"):
+            with st.spinner("Generating personalized guide..."):
+                st.success("✅ Guide generated!")
+                
+                # Mock guide content
+                if experience_level == "Complete Beginner":
+                    st.markdown("#### 🚀 Getting Started Guide")
+                    st.write("""
+                    **Step 1: Choose Your Niche**
+                    - Start with low-competition niches like beauty or home goods
+                    - Research trending products using our analysis tools
+                    - Consider your interests and budget
+                    
+                    **Step 2: Find Products**
+                    - Use our product research tools
+                    - Look for products with good profit margins (30%+)
+                    - Start with 3-5 products to test
+                    
+                    **Step 3: Find Suppliers**
+                    - Use our supplier finder
+                    - Start with small orders (50-100 units)
+                    - Verify supplier quality and reliability
+                    
+                    **Step 4: Set Up Your Store**
+                    - Choose one marketplace to start (Wildberries or Ozon)
+                    - Create compelling product listings
+                    - Set competitive prices using our pricing advisor
+                    """)
+                    
+                    st.markdown("#### 💡 Pro Tips for Beginners")
+                    tips = [
+                        "Start small and test before scaling",
+                        "Focus on customer service and reviews",
+                        "Use our AI tools for price optimization",
+                        "Monitor competitors regularly",
+                        "Keep detailed records of all costs"
+                    ]
+                    for tip in tips:
+                        st.write(f"• {tip}")
+                
+                elif experience_level == "Some Experience":
+                    st.markdown("#### 📈 Growth Strategy")
+                    st.write("""
+                    **Advanced Product Research**
+                    - Use AI trend analysis for product selection
+                    - Analyze seasonal patterns and demand cycles
+                    - Consider private labeling opportunities
+                    
+                    **Multi-Marketplace Strategy**
+                    - Expand to 2-3 marketplaces
+                    - Use different pricing strategies per platform
+                    - Leverage marketplace-specific features
+                    
+                    **Supplier Optimization**
+                    - Negotiate better terms with reliable suppliers
+                    - Consider direct manufacturer relationships
+                    - Implement quality control processes
+                    """)
+                
+                else:
+                    st.markdown("#### 🏆 Expert Strategies")
+                    st.write("""
+                    **Advanced Analytics**
+                    - Use predictive analytics for inventory planning
+                    - Implement dynamic pricing strategies
+                    - Leverage AI for market trend prediction
+                    
+                    **Business Scaling**
+                    - Consider private label development
+                    - Explore international markets
+                    - Build brand recognition and loyalty
+                    
+                    **Automation**
+                    - Automate price monitoring and adjustments
+                    - Implement automated customer service
+                    - Use data-driven decision making
+                    """)
 
 
 def show_parsing_tools():
