@@ -363,3 +363,5 @@ logger.error(f"Failed to export data: {error}")
 ## Лицензия
 
 MIT License - см. файл LICENSE для деталей.
+
+

@@ -523,3 +523,5 @@ class MonitoringService:
 
 # Глобальный экземпляр сервиса мониторинга
 monitoring_service = MonitoringService()
+
+

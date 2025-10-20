@@ -251,3 +251,5 @@ async def init_achievements():
 
 if __name__ == "__main__":
     asyncio.run(init_achievements())
+
+

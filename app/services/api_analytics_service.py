@@ -565,3 +565,5 @@ class APIAnalyticsService:
 
 # Глобальный экземпляр сервиса аналитики API
 api_analytics_service = APIAnalyticsService()
+
+

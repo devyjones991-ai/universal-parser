@@ -490,3 +490,5 @@ async def get_user_achievements(
     ).all()
     
     return achievements
+
+

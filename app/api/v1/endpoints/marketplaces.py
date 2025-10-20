@@ -215,3 +215,5 @@ async def get_marketplaces_health():
     except Exception as e:
         logger.error(f"Error getting marketplaces health overview: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get health overview: {str(e)}")
+
+

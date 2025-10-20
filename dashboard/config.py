@@ -85,3 +85,5 @@ class DashboardConfig:
 
 # Global config instance
 config = DashboardConfig()
+
+

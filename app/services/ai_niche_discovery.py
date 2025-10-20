@@ -642,3 +642,5 @@ class AINicheDiscoveryService:
         except Exception as e:
             logger.error(f"Error getting niche insights for {niche}: {e}")
             return {}
+
+

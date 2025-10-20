@@ -575,3 +575,5 @@ def get_parser(marketplace: str, config: Dict[str, Any]) -> MarketplaceParser:
         raise ValueError(f"Unsupported marketplace: {marketplace}")
     
     return parser_class(config)
+
+

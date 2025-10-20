@@ -270,3 +270,5 @@ class NewMarketplaceParser(MarketplaceParser):
 ---
 
 **Universal Parser** - ваш универсальный инструмент для мониторинга цен! 🚀🛍️
+
+

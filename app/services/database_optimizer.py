@@ -531,3 +531,5 @@ class DatabaseOptimizer:
 
 # Глобальный экземпляр оптимизатора БД
 database_optimizer = DatabaseOptimizer()
+
+

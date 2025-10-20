@@ -521,3 +521,5 @@ async def get_locale_settings(locale: str):
         "territory": locale_info["territory"],
         "display_name": locale_info["name"]
     }
+
+

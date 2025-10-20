@@ -262,3 +262,5 @@ streamlit run dashboard/main.py --server.port 8501
 ## Лицензия
 
 MIT License - см. файл LICENSE для деталей.
+
+

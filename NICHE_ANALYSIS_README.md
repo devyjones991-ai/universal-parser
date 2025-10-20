@@ -369,3 +369,5 @@ python run_dashboard.py
 ---
 
 **Universal Parser Niche Analysis** - ваш умный помощник в выборе ниши! 🚀🔍
+
+

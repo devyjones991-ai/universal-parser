@@ -559,3 +559,5 @@ class TimezoneService:
 
 # Глобальный экземпляр сервиса часовых поясов
 timezone_service = TimezoneService()
+
+

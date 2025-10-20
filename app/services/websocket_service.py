@@ -487,3 +487,5 @@ class WebSocketService:
 
 # Глобальный экземпляр WebSocket сервиса
 websocket_service = WebSocketService()
+
+

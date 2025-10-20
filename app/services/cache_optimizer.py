@@ -489,3 +489,5 @@ class CacheOptimizer:
 
 # Глобальный экземпляр оптимизатора кэша
 cache_optimizer = CacheOptimizer()
+
+

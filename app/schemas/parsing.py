@@ -49,3 +49,4 @@ class MarketplaceItemResponse(BaseModel):
     data: Dict[str, Any] = Field(..., description="Parsed item data")
     cached: bool = Field(default=False, description="Whether result was from cache")
     timestamp: datetime = Field(default_factory=datetime.utcnow)
+

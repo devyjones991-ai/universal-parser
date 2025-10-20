@@ -231,3 +231,5 @@ def export_to_csv(data: List[Dict], filename: str = "universal_parser_export.csv
     """Export data to CSV format"""
     df = pd.DataFrame(data)
     return df.to_csv(index=False)
+
+

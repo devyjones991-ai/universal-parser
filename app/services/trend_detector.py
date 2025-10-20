@@ -745,3 +745,5 @@ class TrendDetectorService:
             })
         
         return training_data
+
+

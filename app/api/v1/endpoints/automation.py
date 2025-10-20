@@ -662,3 +662,5 @@ async def cache_trend_detection_results(trend_data: List[Dict[str, Any]], reques
 
 # Import datetime for the endpoints
 from datetime import datetime, timedelta
+
+

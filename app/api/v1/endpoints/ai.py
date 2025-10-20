@@ -208,3 +208,5 @@ async def get_ai_insights(
     except Exception as e:
         logger.error(f"AI insights error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get insights: {str(e)}")
+
+

@@ -225,3 +225,4 @@ def cached(expire: int = 300, use_json: bool = True):
         
         return wrapper
     return decorator
+

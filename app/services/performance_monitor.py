@@ -448,3 +448,5 @@ class PerformanceMonitor:
 
 # Глобальный экземпляр монитора производительности
 performance_monitor = PerformanceMonitor()
+
+

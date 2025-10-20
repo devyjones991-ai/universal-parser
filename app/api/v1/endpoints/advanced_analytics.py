@@ -572,3 +572,5 @@ async def get_report_templates():
         "templates": templates,
         "total": len(templates)
     }
+
+

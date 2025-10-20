@@ -551,3 +551,5 @@ class NicheAnalysisService:
             ]
         }
         return steps.get(experience_level, steps["complete_beginner"])
+
+

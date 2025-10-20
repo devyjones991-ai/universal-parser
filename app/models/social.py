@@ -361,3 +361,5 @@ class Notification(Base):
     
     # Связи
     user = relationship("UserProfile")
+
+

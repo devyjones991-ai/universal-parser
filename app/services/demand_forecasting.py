@@ -937,3 +937,5 @@ class DemandForecastingService:
         except Exception as e:
             logger.error(f"Error generating inventory recommendation reason: {e}")
             return "Inventory optimization recommended"
+
+

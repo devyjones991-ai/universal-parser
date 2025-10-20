@@ -358,3 +358,5 @@ class CurrencyService:
 
 # Глобальный экземпляр сервиса валют
 currency_service = CurrencyService()
+
+

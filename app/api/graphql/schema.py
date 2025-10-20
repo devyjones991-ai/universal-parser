@@ -504,3 +504,5 @@ schema = graphene.Schema(
     subscription=Subscription,
     types=[ItemType, UserType, UserProfileType, PriceHistoryType, SocialPostType]
 )
+
+

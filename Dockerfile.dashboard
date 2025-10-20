@@ -63,3 +63,5 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
 
 # Run the dashboard
 CMD ["python", "run_dashboard.py"]
+
+

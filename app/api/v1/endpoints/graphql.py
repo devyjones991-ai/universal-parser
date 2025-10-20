@@ -556,3 +556,5 @@ async def graphql_endpoint():
 
 # Добавляем GraphQL приложение к роутеру
 router.add_route("/graphql", graphql_app, methods=["GET", "POST"])
+
+

@@ -105,3 +105,5 @@ class AIInsightsResponse(BaseModel):
     analysis_period_days: int = Field(..., description="Analysis period in days")
     insights: Dict[str, Any] = Field(..., description="AI insights")
     timestamp: float = Field(..., description="Analysis timestamp")
+
+

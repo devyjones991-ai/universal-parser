@@ -214,3 +214,5 @@ class SubscriptionService:
 
         features = plan.get_features_list()
         return feature in features
+
+

@@ -411,3 +411,5 @@ class GamificationPointsResponse(BaseModel):
     points_to_next_level: int
     recent_earnings: List[Dict[str, Any]]
     achievements_unlocked: List[UserAchievementResponse]
+
+

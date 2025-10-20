@@ -191,3 +191,5 @@ class BeginnerGuideResponse(BaseModel):
     recommended_actions: List[str] = Field(..., description="Recommended actions")
     resources: List[Dict[str, str]] = Field(..., description="Helpful resources")
     timeline: Dict[str, str] = Field(..., description="Recommended timeline")
+
+

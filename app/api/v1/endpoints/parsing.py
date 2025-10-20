@@ -119,3 +119,4 @@ async def parsing_health_check():
             "error": str(e),
             "timestamp": time.time()
         }
+

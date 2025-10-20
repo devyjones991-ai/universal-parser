@@ -202,3 +202,5 @@ class PaymentIntentResponse(BaseModel):
     payment_intent_id: str
     amount: float
     currency: str
+
+

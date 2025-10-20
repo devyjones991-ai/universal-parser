@@ -330,3 +330,5 @@ class ReportSchedulerService:
         except Exception as e:
             print(f"Error toggling schedule: {e}")
             return False
+
+

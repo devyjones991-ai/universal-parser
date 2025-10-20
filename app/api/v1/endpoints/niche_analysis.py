@@ -336,3 +336,5 @@ def _get_profit_recommendations(profit_margin: float) -> List[str]:
             "Срочно пересмотрите всю бизнес-модель",
             "Рассмотрите другую нишу или товары"
         ]
+
+

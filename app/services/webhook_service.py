@@ -526,3 +526,5 @@ class WebhookService:
 
 # Глобальный экземпляр сервиса webhook
 webhook_service = WebhookService()
+
+

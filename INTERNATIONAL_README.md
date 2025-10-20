@@ -373,3 +373,5 @@ logger.error(f"Missing translation key: {key}")
 ## Лицензия
 
 MIT License - см. файл LICENSE для деталей.
+
+

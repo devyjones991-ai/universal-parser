@@ -302,3 +302,5 @@ def downgrade():
     op.drop_table('group_members')
     op.drop_table('follows')
     op.drop_table('friendships')
+
+

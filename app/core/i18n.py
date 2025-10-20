@@ -467,3 +467,5 @@ def format_datetime(dt: datetime, locale: str = None, timezone: str = None) -> s
 def is_rtl(locale: str) -> bool:
     """Проверить RTL (удобная функция)"""
     return i18n_manager.is_rtl(locale)
+
+

@@ -480,3 +480,5 @@ async def cleanup_old_metrics(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error cleaning up old metrics: {e}"
         )
+
+

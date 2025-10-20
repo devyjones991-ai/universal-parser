@@ -145,3 +145,5 @@ class SubscriptionPlan(Base):
             return {}
         import json
         return json.loads(self.limits)
+
+

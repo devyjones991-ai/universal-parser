@@ -558,3 +558,5 @@ async def get_performance_metrics(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error getting performance metrics: {e}"
         )
+
+

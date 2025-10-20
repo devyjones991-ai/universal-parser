@@ -122,3 +122,5 @@ def downgrade():
     op.drop_table('payments')
     op.drop_table('subscriptions')
     op.drop_table('subscription_plans')
+
+

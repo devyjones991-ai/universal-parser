@@ -149,3 +149,5 @@ async def check_feature_access(user_id: str, feature: str, db: Session = Depends
     service = SubscriptionService(db)
     has_access = service.can_use_feature(user_id, feature)
     return {"feature": feature, "has_access": has_access}
+
+
