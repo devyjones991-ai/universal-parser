@@ -1,6 +1,5 @@
 """API эндпоинты для российских маркетплейсов"""
 
-from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
@@ -9,7 +8,6 @@ from app.services.russian_marketplace_parsers import RussianMarketplaceService
 from app.schemas.parsing import ParsingResponse, ParsingRequest
 
 router = APIRouter()
-
 
 @router.get("/marketplaces")
 async def get_russian_marketplaces():
@@ -64,48 +62,45 @@ async def get_russian_marketplaces():
             "features": ["api", "filters", "categories", "reviews", "ratings", "stock", "delivery", "pickup"]
         }
     ]
-    
+
     return {
         "marketplaces": marketplaces,
         "total": len(marketplaces)
     }
-
 
 @router.get("/{marketplace}/categories")
 async def get_marketplace_categories(marketplace: str):
     """Получить категории для конкретного маркетплейса"""
     service = RussianMarketplaceService()
     categories = await service.get_categories(marketplace)
-    
+
     if not categories:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Categories not found for marketplace: {marketplace}"
         )
-    
+
     return {
         "marketplace": marketplace,
         "categories": categories
     }
-
 
 @router.get("/{marketplace}/filters")
 async def get_marketplace_filters(marketplace: str):
     """Получить доступные фильтры для маркетплейса"""
     service = RussianMarketplaceService()
     filters = await service.get_filters(marketplace)
-    
+
     if not filters:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Filters not found for marketplace: {marketplace}"
         )
-    
+
     return {
         "marketplace": marketplace,
         "filters": filters
     }
-
 
 @router.get("/{marketplace}/search")
 async def search_products(
@@ -126,7 +121,7 @@ async def search_products(
     urgent: Optional[bool] = Query(None, description="Срочно (для Avito)")
 ):
     """Поиск товаров на российском маркетплейсе"""
-    
+
     # Формируем фильтры
     filters = {}
     if price_min is not None:
@@ -153,11 +148,11 @@ async def search_products(
         filters["with_photo"] = with_photo
     if urgent is not None:
         filters["urgent"] = urgent
-    
+
     try:
         service = RussianMarketplaceService()
         products = await service.search_products(marketplace, query, page, filters)
-        
+
         return {
             "marketplace": marketplace,
             "query": query,
@@ -166,7 +161,7 @@ async def search_products(
             "products": products,
             "total": len(products)
         }
-    
+
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -178,27 +173,26 @@ async def search_products(
             detail=f"Search failed: {str(e)}"
         )
 
-
 @router.get("/{marketplace}/product/{product_id}")
 async def get_product_details(marketplace: str, product_id: str):
     """Получить детальную информацию о товаре"""
-    
+
     try:
         service = RussianMarketplaceService()
         product = await service.get_product_details(marketplace, product_id)
-        
+
         if not product:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Product {product_id} not found on {marketplace}"
             )
-        
+
         return {
             "marketplace": marketplace,
             "product_id": product_id,
             "product": product
         }
-    
+
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -210,7 +204,6 @@ async def get_product_details(marketplace: str, product_id: str):
             detail=f"Failed to get product details: {str(e)}"
         )
 
-
 @router.post("/{marketplace}/parse")
 async def parse_marketplace(
     marketplace: str,
@@ -218,15 +211,15 @@ async def parse_marketplace(
     db: Session = Depends(get_db)
 ):
     """Парсинг товаров с российского маркетплейса"""
-    
+
     try:
         service = RussianMarketplaceService()
-        
+
         # Формируем фильтры из запроса
         filters = {}
         if hasattr(request, 'filters') and request.filters:
             filters = request.filters
-        
+
         # Выполняем поиск
         products = await service.search_products(
             marketplace=marketplace,
@@ -234,7 +227,7 @@ async def parse_marketplace(
             page=request.page or 1,
             filters=filters
         )
-        
+
         # Обрабатываем результаты
         results = []
         for product in products:
@@ -257,7 +250,7 @@ async def parse_marketplace(
                 "parsed_at": "2024-01-15T10:00:00Z"  # В реальном приложении использовать datetime.utcnow()
             }
             results.append(result)
-        
+
         return {
             "marketplace": marketplace,
             "query": request.query,
@@ -267,7 +260,7 @@ async def parse_marketplace(
             "total": len(results),
             "success": True
         }
-    
+
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -279,11 +272,10 @@ async def parse_marketplace(
             detail=f"Parsing failed: {str(e)}"
         )
 
-
 @router.get("/{marketplace}/stats")
 async def get_marketplace_stats(marketplace: str):
     """Получить статистику по маркетплейсу"""
-    
+
     # Заглушка для демонстрации
     stats = {
         "wildberries": {
@@ -329,16 +321,14 @@ async def get_marketplace_stats(marketplace: str):
             "last_updated": "2024-01-15T10:00:00Z"
         }
     }
-    
+
     if marketplace not in stats:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Stats not found for marketplace: {marketplace}"
         )
-    
+
     return {
         "marketplace": marketplace,
         "stats": stats[marketplace]
     }
-
-

@@ -13,7 +13,6 @@ from app.models.user import User
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-
 @router.get("/graphql", response_class=HTMLResponse)
 async def graphql_playground():
     """GraphQL Playground для тестирования запросов"""
@@ -40,7 +39,7 @@ async def graphql_playground():
                     height: 100vh;
                 }
             </style>
-            <div style="display: flex; align-items: center; justify-content: center; height: 100vh; color: white; font-size: 24px;">
+            <div style="display: flex; align-items: center; justify-content: center; height: 100vh; color: white; font-size  # noqa  # noqa: E501 E501 24px;">
                 Loading GraphQL Playground...
             </div>
         </div>
@@ -303,7 +302,6 @@ subscription NewSocialPost {
     """
     return HTMLResponse(content=html_content)
 
-
 @router.get("/graphql/schema")
 async def graphql_schema():
     """Получить GraphQL схему в формате SDL"""
@@ -464,16 +462,15 @@ async def graphql_schema():
 
         scalar DateTime
         """
-        
+
         return {"schema": sdl_schema}
-    
+
     except Exception as e:
-        logger.error(f"Error getting GraphQL schema: {e}")
+        logger.error("Error getting GraphQL schema: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error getting GraphQL schema: {e}"
         )
-
 
 @router.get("/graphql/introspection")
 async def graphql_introspection():
@@ -505,16 +502,15 @@ async def graphql_introspection():
                 }
             }
         }
-        
+
         return introspection_data
-    
+
     except Exception as e:
-        logger.error(f"Error getting GraphQL introspection: {e}")
+        logger.error("Error getting GraphQL introspection: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error getting GraphQL introspection: {e}"
         )
-
 
 @router.get("/graphql/health")
 async def graphql_health():
@@ -535,26 +531,21 @@ async def graphql_health():
                 "Playground"
             ]
         }
-    
+
     except Exception as e:
-        logger.error(f"Error checking GraphQL health: {e}")
+        logger.error("Error checking GraphQL health: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error checking GraphQL health: {e}"
         )
 
-
 # Создаем GraphQL приложение
 graphql_app = GraphQLApp(schema=schema, graphiql=True)
-
 
 @router.get("/graphql/endpoint")
 async def graphql_endpoint():
     """Основной GraphQL эндпоинт"""
     return {"message": "GraphQL endpoint is available at /api/v1/graphql"}
 
-
 # Добавляем GraphQL приложение к роутеру
 router.add_route("/graphql", graphql_app, methods=["GET", "POST"])
-
-

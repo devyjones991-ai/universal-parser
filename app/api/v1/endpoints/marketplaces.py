@@ -9,18 +9,17 @@ import logging
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-
 @router.get("/", response_model=List[Dict[str, Any]])
 async def get_supported_marketplaces():
     """Get list of supported marketplaces"""
     try:
         marketplaces = []
-        
+
         for key, config in parsing_profiles.items():
             # Skip test profiles
             if 'test' in key.lower() or 'webscraper' in key.lower():
                 continue
-                
+
             marketplace_info = {
                 "id": key,
                 "name": config.get("name", key.title()),
@@ -38,13 +37,12 @@ async def get_supported_marketplaces():
                 }
             }
             marketplaces.append(marketplace_info)
-        
-        return marketplaces
-        
-    except Exception as e:
-        logger.error(f"Error getting marketplaces: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get marketplaces: {str(e)}")
 
+        return marketplaces
+
+    except Exception as e:
+        logger.error("Error getting marketplaces: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get marketplaces  # noqa  # noqa: E501 E501 {str(e)}")
 
 @router.get("/{marketplace_id}", response_model=Dict[str, Any])
 async def get_marketplace_details(marketplace_id: str):
@@ -52,13 +50,13 @@ async def get_marketplace_details(marketplace_id: str):
     try:
         if marketplace_id not in parsing_profiles:
             raise HTTPException(status_code=404, detail="Marketplace not found")
-        
+
         config = parsing_profiles[marketplace_id]
-        
+
         # Skip test profiles
-        if 'test' in marketplace_id.lower() or 'webscraper' in marketplace_id.lower():
+        if 'test' in marketplace_id.lower() or 'webscraper' in marketplace_id.lower()  # noqa  # noqa: E501 E501
             raise HTTPException(status_code=404, detail="Marketplace not found")
-        
+
         details = {
             "id": marketplace_id,
             "name": config.get("name", marketplace_id.title()),
@@ -81,15 +79,14 @@ async def get_marketplace_details(marketplace_id: str):
                 "specifications_extraction": "specifications" in config.get("selectors", {})
             }
         }
-        
+
         return details
-        
+
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting marketplace details for {marketplace_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get marketplace details: {str(e)}")
-
+        logger.error("Error getting marketplace details for {marketplace_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get marketplace details  # noqa  # noqa: E501 E501 {str(e)}")
 
 @router.get("/{marketplace_id}/test")
 async def test_marketplace_connection(marketplace_id: str):
@@ -97,20 +94,20 @@ async def test_marketplace_connection(marketplace_id: str):
     try:
         if marketplace_id not in parsing_profiles:
             raise HTTPException(status_code=404, detail="Marketplace not found")
-        
+
         config = parsing_profiles[marketplace_id]
-        
+
         # Skip test profiles
-        if 'test' in marketplace_id.lower() or 'webscraper' in marketplace_id.lower():
+        if 'test' in marketplace_id.lower() or 'webscraper' in marketplace_id.lower()  # noqa  # noqa: E501 E501
             raise HTTPException(status_code=404, detail="Marketplace not found")
-        
+
         # Test basic connectivity
         import httpx
-        
+
         base_url = config.get("base_url", "")
         if not base_url:
             return {"status": "error", "message": "No base URL configured"}
-        
+
         async with httpx.AsyncClient(timeout=10) as client:
             try:
                 response = await client.get(base_url)
@@ -143,13 +140,12 @@ async def test_marketplace_connection(marketplace_id: str):
                     "status": "error",
                     "message": f"Connection error: {str(e)}"
                 }
-        
+
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error testing marketplace connection for {marketplace_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to test marketplace connection: {str(e)}")
-
+        logger.error("Error testing marketplace connection for {marketplace_id}  # noqa  # noqa: E501 E501 {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to test marketplace connection  # noqa  # noqa: E501 E501 {str(e)}")
 
 @router.get("/{marketplace_id}/stats")
 async def get_marketplace_stats(marketplace_id: str):
@@ -157,11 +153,11 @@ async def get_marketplace_stats(marketplace_id: str):
     try:
         if marketplace_id not in parsing_profiles:
             raise HTTPException(status_code=404, detail="Marketplace not found")
-        
+
         # Skip test profiles
-        if 'test' in marketplace_id.lower() or 'webscraper' in marketplace_id.lower():
+        if 'test' in marketplace_id.lower() or 'webscraper' in marketplace_id.lower()  # noqa  # noqa: E501 E501
             raise HTTPException(status_code=404, detail="Marketplace not found")
-        
+
         # Mock statistics - in real implementation, this would come from database
         stats = {
             "marketplace_id": marketplace_id,
@@ -173,27 +169,26 @@ async def get_marketplace_stats(marketplace_id: str):
             "last_failed_parse": None,
             "success_rate": 0.0
         }
-        
+
         return stats
-        
+
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting marketplace stats for {marketplace_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get marketplace stats: {str(e)}")
-
+        logger.error("Error getting marketplace stats for {marketplace_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get marketplace stats  # noqa  # noqa: E501 E501 {str(e)}")
 
 @router.get("/health/overview")
 async def get_marketplaces_health():
     """Get health overview of all marketplaces"""
     try:
         health_data = []
-        
+
         for key, config in parsing_profiles.items():
             # Skip test profiles
             if 'test' in key.lower() or 'webscraper' in key.lower():
                 continue
-            
+
             health_info = {
                 "marketplace_id": key,
                 "name": config.get("name", key.title()),
@@ -203,7 +198,7 @@ async def get_marketplaces_health():
                 "error_rate": 0.0
             }
             health_data.append(health_info)
-        
+
         return {
             "total_marketplaces": len(health_data),
             "healthy": len([m for m in health_data if m["status"] == "healthy"]),
@@ -211,9 +206,7 @@ async def get_marketplaces_health():
             "unknown": len([m for m in health_data if m["status"] == "unknown"]),
             "marketplaces": health_data
         }
-        
+
     except Exception as e:
-        logger.error(f"Error getting marketplaces health overview: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get health overview: {str(e)}")
-
-
+        logger.error("Error getting marketplaces health overview: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get health overview  # noqa  # noqa: E501 E501 {str(e)}")

@@ -1,6 +1,5 @@
 """API эндпоинты для социальных функций и геймификации"""
 
-from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
@@ -19,7 +18,6 @@ from app.schemas.social import (
 
 router = APIRouter()
 
-
 # === ПРОФИЛИ ПОЛЬЗОВАТЕЛЕЙ ===
 
 @router.post("/profiles", response_model=UserProfileResponse)
@@ -32,7 +30,6 @@ async def create_user_profile(
     profile = service.create_user_profile(profile_data)
     return profile
 
-
 @router.get("/profiles/{user_id}", response_model=UserProfileResponse)
 async def get_user_profile(user_id: str, db: Session = Depends(get_db)):
     """Получить профиль пользователя"""
@@ -44,7 +41,6 @@ async def get_user_profile(user_id: str, db: Session = Depends(get_db)):
             detail="User profile not found"
         )
     return profile
-
 
 @router.put("/profiles/{user_id}", response_model=UserProfileResponse)
 async def update_user_profile(
@@ -62,7 +58,6 @@ async def update_user_profile(
         )
     return profile
 
-
 @router.get("/profiles/{user_id}/stats", response_model=UserStatsResponse)
 async def get_user_stats(user_id: str, db: Session = Depends(get_db)):
     """Получить статистику пользователя"""
@@ -74,7 +69,6 @@ async def get_user_stats(user_id: str, db: Session = Depends(get_db)):
             detail="User not found"
         )
     return stats
-
 
 # === ГРУППЫ ===
 
@@ -89,7 +83,6 @@ async def create_group(
     group = service.create_group(group_data, owner_id)
     return group
 
-
 @router.get("/groups/{group_id}", response_model=GroupResponse)
 async def get_group(group_id: str, db: Session = Depends(get_db)):
     """Получить группу"""
@@ -101,7 +94,6 @@ async def get_group(group_id: str, db: Session = Depends(get_db)):
             detail="Group not found"
         )
     return group
-
 
 @router.post("/groups/{group_id}/join")
 async def join_group(
@@ -119,7 +111,6 @@ async def join_group(
         )
     return {"message": "Successfully joined group"}
 
-
 @router.delete("/groups/{group_id}/leave")
 async def leave_group(
     group_id: str,
@@ -135,7 +126,6 @@ async def leave_group(
             detail="Failed to leave group"
         )
     return {"message": "Successfully left group"}
-
 
 # === СОЦИАЛЬНЫЕ ПОСТЫ ===
 
@@ -156,7 +146,6 @@ async def create_post(
             detail=str(e)
         )
 
-
 @router.get("/feed", response_model=SocialFeedResponse)
 async def get_social_feed(
     user_id: str = Query(..., description="ID пользователя"),
@@ -167,14 +156,13 @@ async def get_social_feed(
     """Получить социальную ленту пользователя"""
     service = SocialService(db)
     posts = service.get_social_feed(user_id, page, limit)
-    
+
     return SocialFeedResponse(
         posts=posts,
         total=len(posts),
         page=page,
         has_more=len(posts) == limit
     )
-
 
 @router.get("/posts/{post_id}", response_model=SocialPostResponse)
 async def get_post(post_id: str, db: Session = Depends(get_db)):
@@ -187,7 +175,6 @@ async def get_post(post_id: str, db: Session = Depends(get_db)):
             detail="Post not found"
         )
     return post
-
 
 @router.put("/posts/{post_id}", response_model=SocialPostResponse)
 async def update_post(
@@ -204,22 +191,21 @@ async def update_post(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Post not found"
         )
-    
+
     # Проверяем права доступа
     if post.author_id != user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to update this post"
         )
-    
+
     for field, value in update_data.dict(exclude_unset=True).items():
         setattr(post, field, value)
-    
+
     post.updated_at = datetime.utcnow()
     service.db.commit()
     service.db.refresh(post)
     return post
-
 
 @router.delete("/posts/{post_id}")
 async def delete_post(
@@ -235,18 +221,17 @@ async def delete_post(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Post not found"
         )
-    
+
     # Проверяем права доступа
     if post.author_id != user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to delete this post"
         )
-    
+
     service.db.delete(post)
     service.db.commit()
     return {"message": "Post deleted successfully"}
-
 
 # === КОММЕНТАРИИ ===
 
@@ -267,7 +252,6 @@ async def create_comment(
             detail=str(e)
         )
 
-
 @router.get("/posts/{post_id}/comments", response_model=List[CommentResponse])
 async def get_post_comments(
     post_id: str,
@@ -281,9 +265,8 @@ async def get_post_comments(
         Comment.post_id == post_id,
         Comment.parent_id.is_(None)  # Только корневые комментарии
     ).order_by(Comment.created_at.desc()).offset((page - 1) * limit).limit(limit).all()
-    
-    return comments
 
+    return comments
 
 # === ЛАЙКИ ===
 
@@ -301,7 +284,7 @@ async def toggle_like(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed to toggle like"
         )
-    
+
     # Возвращаем информацию о лайке
     if like_data.post_id:
         like = service.db.query(Like).filter(
@@ -313,9 +296,8 @@ async def toggle_like(
             Like.user_id == user_id,
             Like.comment_id == like_data.comment_id
         ).first()
-    
-    return like
 
+    return like
 
 # === ЛИДЕРБОРДЫ ===
 
@@ -329,7 +311,6 @@ async def create_leaderboard(
     leaderboard = service.create_leaderboard(leaderboard_data)
     return leaderboard
 
-
 @router.get("/leaderboards/{leaderboard_id}", response_model=List[LeaderboardEntryResponse])
 async def get_leaderboard(
     leaderboard_id: str,
@@ -340,7 +321,6 @@ async def get_leaderboard(
     service = SocialService(db)
     entries = service.get_leaderboard(leaderboard_id, limit)
     return entries
-
 
 @router.post("/leaderboards/{leaderboard_id}/update")
 async def update_leaderboard_score(
@@ -360,7 +340,6 @@ async def update_leaderboard_score(
         )
     return {"message": "Leaderboard updated successfully"}
 
-
 # === УВЕДОМЛЕНИЯ ===
 
 @router.get("/notifications", response_model=List[NotificationResponse])
@@ -373,7 +352,6 @@ async def get_user_notifications(
     service = SocialService(db)
     notifications = service.get_user_notifications(user_id, limit)
     return notifications
-
 
 @router.put("/notifications/{notification_id}/read")
 async def mark_notification_read(
@@ -391,7 +369,6 @@ async def mark_notification_read(
         )
     return {"message": "Notification marked as read"}
 
-
 # === ДРУЗЬЯ И ПОДПИСКИ ===
 
 @router.post("/friends/request")
@@ -405,7 +382,6 @@ async def send_friend_request(
     # Здесь должна быть логика отправки запроса в друзья
     return {"message": "Friend request sent"}
 
-
 @router.post("/follow")
 async def follow_user(
     request_data: FollowRequest,
@@ -416,7 +392,6 @@ async def follow_user(
     service = SocialService(db)
     # Здесь должна быть логика подписки на пользователя
     return {"message": "Successfully followed user"}
-
 
 # === ГЕЙМИФИКАЦИЯ ===
 
@@ -433,17 +408,17 @@ async def get_gamification_points(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User profile not found"
         )
-    
+
     # Рассчитываем очки до следующего уровня
     required_exp = profile.level * 1000
     points_to_next_level = max(0, required_exp - profile.experience_points)
-    
+
     # Получаем недавние достижения
     recent_achievements = service.db.query(UserAchievement).filter(
         UserAchievement.user_id == profile.id,
         UserAchievement.is_completed == True
     ).order_by(UserAchievement.completed_at.desc()).limit(5).all()
-    
+
     return GamificationPointsResponse(
         user_id=user_id,
         total_points=profile.total_points,
@@ -454,7 +429,6 @@ async def get_gamification_points(
         achievements_unlocked=recent_achievements
     )
 
-
 @router.get("/achievements", response_model=List[AchievementResponse])
 async def get_achievements(
     category: Optional[str] = Query(None, description="Категория достижений"),
@@ -463,13 +437,12 @@ async def get_achievements(
     """Получить список достижений"""
     service = SocialService(db)
     query = service.db.query(Achievement).filter(Achievement.is_active == True)
-    
+
     if category:
         query = query.filter(Achievement.category == category)
-    
+
     achievements = query.all()
     return achievements
-
 
 @router.get("/users/{user_id}/achievements", response_model=List[UserAchievementResponse])
 async def get_user_achievements(
@@ -484,11 +457,9 @@ async def get_user_achievements(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User profile not found"
         )
-    
+
     achievements = service.db.query(UserAchievement).filter(
         UserAchievement.user_id == profile.id
     ).all()
-    
+
     return achievements
-
-

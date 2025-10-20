@@ -1,7 +1,6 @@
 """API эндпоинты для аналитики использования API"""
 
 from typing import List, Dict, Any, Optional
-from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -12,7 +11,6 @@ from app.api.deps import get_current_active_user
 from app.models.user import User
 
 router = APIRouter()
-
 
 class APIUsageStatsResponse(BaseModel):
     """Ответ со статистикой использования API"""
@@ -27,7 +25,6 @@ class APIUsageStatsResponse(BaseModel):
     hourly_requests: List[Dict[str, Any]]
     daily_requests: List[Dict[str, Any]]
 
-
 class EndpointStatsResponse(BaseModel):
     """Ответ со статистикой эндпоинта"""
     endpoint: str
@@ -39,7 +36,6 @@ class EndpointStatsResponse(BaseModel):
     unique_users: int
     top_users: List[Dict[str, Any]]
 
-
 class UserStatsResponse(BaseModel):
     """Ответ со статистикой пользователя"""
     user_id: str
@@ -49,7 +45,6 @@ class UserStatsResponse(BaseModel):
     error_rate: float
     top_endpoints: List[Dict[str, Any]]
 
-
 class RateLimitStatsResponse(BaseModel):
     """Ответ со статистикой rate limiting"""
     total_hits: int
@@ -58,7 +53,6 @@ class RateLimitStatsResponse(BaseModel):
     user_counts: Dict[str, int]
     top_limited_endpoints: List[Dict[str, Any]]
     top_limited_users: List[Dict[str, Any]]
-
 
 @router.get("/usage", response_model=APIUsageStatsResponse)
 async def get_api_usage_stats(
@@ -76,7 +70,7 @@ async def get_api_usage_stats(
             endpoint=endpoint,
             user_id=user_id
         )
-        
+
         return APIUsageStatsResponse(
             total_requests=stats.total_requests,
             unique_users=stats.unique_users,
@@ -89,13 +83,12 @@ async def get_api_usage_stats(
             hourly_requests=stats.hourly_requests,
             daily_requests=stats.daily_requests
         )
-    
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error getting API usage stats: {e}"
         )
-
 
 @router.get("/endpoints/{endpoint}/stats", response_model=EndpointStatsResponse)
 async def get_endpoint_stats(
@@ -111,13 +104,13 @@ async def get_endpoint_stats(
             start_time=start_time,
             end_time=end_time
         )
-        
+
         if "error" in stats:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=stats["error"]
             )
-        
+
         return EndpointStatsResponse(
             endpoint=stats["endpoint"],
             total_requests=stats["total_requests"],
@@ -128,7 +121,7 @@ async def get_endpoint_stats(
             unique_users=stats["unique_users"],
             top_users=stats["top_users"]
         )
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -136,7 +129,6 @@ async def get_endpoint_stats(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error getting endpoint stats: {e}"
         )
-
 
 @router.get("/users/{user_id}/stats", response_model=UserStatsResponse)
 async def get_user_stats(
@@ -152,13 +144,13 @@ async def get_user_stats(
             start_time=start_time,
             end_time=end_time
         )
-        
+
         if "error" in stats:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=stats["error"]
             )
-        
+
         return UserStatsResponse(
             user_id=stats["user_id"],
             total_requests=stats["total_requests"],
@@ -167,7 +159,7 @@ async def get_user_stats(
             error_rate=stats["error_rate"],
             top_endpoints=stats["top_endpoints"]
         )
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -175,7 +167,6 @@ async def get_user_stats(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error getting user stats: {e}"
         )
-
 
 @router.get("/rate-limits", response_model=RateLimitStatsResponse)
 async def get_rate_limit_stats(
@@ -189,13 +180,13 @@ async def get_rate_limit_stats(
             start_time=start_time,
             end_time=end_time
         )
-        
+
         if "error" in stats:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=stats["error"]
             )
-        
+
         return RateLimitStatsResponse(
             total_hits=stats["total_hits"],
             limit_counts=stats["limit_counts"],
@@ -204,7 +195,7 @@ async def get_rate_limit_stats(
             top_limited_endpoints=stats["top_limited_endpoints"],
             top_limited_users=stats["top_limited_users"]
         )
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -213,7 +204,6 @@ async def get_rate_limit_stats(
             detail=f"Error getting rate limit stats: {e}"
         )
 
-
 @router.get("/health")
 async def get_api_health():
     """Получить состояние API"""
@@ -221,19 +211,19 @@ async def get_api_health():
         # Получаем базовую статистику за последний час
         end_time = datetime.utcnow()
         start_time = end_time - timedelta(hours=1)
-        
+
         stats = await api_analytics_service.get_usage_stats(
             start_time=start_time,
             end_time=end_time
         )
-        
+
         # Определяем состояние API
         health_status = "healthy"
         if stats.error_rate > 10:  # Более 10% ошибок
             health_status = "degraded"
         elif stats.error_rate > 25:  # Более 25% ошибок
             health_status = "unhealthy"
-        
+
         return {
             "status": health_status,
             "timestamp": datetime.utcnow().isoformat(),
@@ -246,7 +236,7 @@ async def get_api_health():
             "uptime": "99.9%",  # Заглушка
             "version": "1.0.0"
         }
-    
+
     except Exception as e:
         return {
             "status": "unhealthy",
@@ -255,7 +245,6 @@ async def get_api_health():
             "uptime": "unknown",
             "version": "1.0.0"
         }
-
 
 @router.get("/metrics")
 async def get_api_metrics(
@@ -269,56 +258,55 @@ async def get_api_metrics(
             start_time = datetime.utcnow() - timedelta(hours=1)
         if end_time is None:
             end_time = datetime.utcnow()
-        
+
         stats = await api_analytics_service.get_usage_stats(
             start_time=start_time,
             end_time=end_time
         )
-        
+
         # Формируем метрики в формате Prometheus
         metrics = []
-        
+
         # Общие метрики
         metrics.append(f"# HELP api_requests_total Total number of API requests")
         metrics.append(f"# TYPE api_requests_total counter")
         metrics.append(f"api_requests_total {stats.total_requests}")
-        
+
         metrics.append(f"# HELP api_response_time_seconds Average API response time")
         metrics.append(f"# TYPE api_response_time_seconds gauge")
         metrics.append(f"api_response_time_seconds {stats.average_response_time}")
-        
+
         metrics.append(f"# HELP api_error_rate_percent API error rate percentage")
         metrics.append(f"# TYPE api_error_rate_percent gauge")
         metrics.append(f"api_error_rate_percent {stats.error_rate}")
-        
+
         metrics.append(f"# HELP api_unique_users Total number of unique users")
         metrics.append(f"# TYPE api_unique_users gauge")
         metrics.append(f"api_unique_users {stats.unique_users}")
-        
+
         metrics.append(f"# HELP api_unique_ips Total number of unique IP addresses")
         metrics.append(f"# TYPE api_unique_ips gauge")
         metrics.append(f"api_unique_ips {stats.unique_ips}")
-        
+
         # Метрики по эндпоинтам
         for endpoint_data in stats.top_endpoints[:10]:
             endpoint = endpoint_data["endpoint"].replace(" ", "_").replace("/", "_")
             count = endpoint_data["count"]
             metrics.append(f"api_endpoint_requests_total{{endpoint=\"{endpoint}\"}} {count}")
-        
+
         # Метрики по пользователям
         for user_data in stats.top_users[:10]:
             user_id = user_data["user_id"]
             count = user_data["count"]
             metrics.append(f"api_user_requests_total{{user_id=\"{user_id}\"}} {count}")
-        
+
         return "\n".join(metrics)
-    
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error getting API metrics: {e}"
         )
-
 
 @router.get("/endpoints")
 async def list_endpoints(
@@ -383,18 +371,17 @@ async def list_endpoints(
                 "category": "i18n"
             }
         ]
-        
+
         return {
             "endpoints": endpoints,
             "total": len(endpoints)
         }
-    
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error listing endpoints: {e}"
         )
-
 
 @router.get("/performance")
 async def get_performance_metrics(
@@ -408,15 +395,15 @@ async def get_performance_metrics(
             start_time = datetime.utcnow() - timedelta(hours=24)
         if end_time is None:
             end_time = datetime.utcnow()
-        
+
         stats = await api_analytics_service.get_usage_stats(
             start_time=start_time,
             end_time=end_time
         )
-        
+
         # Вычисляем дополнительные метрики производительности
         requests_per_hour = stats.total_requests / ((end_time - start_time).total_seconds() / 3600) if start_time != end_time else 0
-        
+
         return {
             "performance_metrics": {
                 "requests_per_hour": round(requests_per_hour, 2),
@@ -444,13 +431,12 @@ async def get_performance_metrics(
                 "end_time": end_time.isoformat()
             }
         }
-    
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error getting performance metrics: {e}"
         )
-
 
 @router.post("/cleanup")
 async def cleanup_old_metrics(
@@ -460,7 +446,7 @@ async def cleanup_old_metrics(
     """Очистить старые метрики API"""
     try:
         success = await api_analytics_service.cleanup_old_metrics(days)
-        
+
         if success:
             return {
                 "message": f"Cleaned up API metrics older than {days} days",
@@ -472,7 +458,7 @@ async def cleanup_old_metrics(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to cleanup old metrics"
             )
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -480,5 +466,3 @@ async def cleanup_old_metrics(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error cleaning up old metrics: {e}"
         )
-
-

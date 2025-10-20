@@ -1,6 +1,5 @@
 """API эндпоинты для платежей и кэшбека"""
 
-from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -14,7 +13,6 @@ from app.schemas.subscription import (
 
 router = APIRouter()
 
-
 @router.post("/", response_model=PaymentResponse)
 async def create_payment(
     payment_data: PaymentCreate,
@@ -24,7 +22,6 @@ async def create_payment(
     service = PaymentService(db)
     payment = service.create_payment(payment_data)
     return payment
-
 
 @router.get("/{payment_id}", response_model=PaymentResponse)
 async def get_payment(payment_id: str, db: Session = Depends(get_db)):
@@ -38,7 +35,6 @@ async def get_payment(payment_id: str, db: Session = Depends(get_db)):
         )
     return payment
 
-
 @router.get("/user/{user_id}", response_model=List[PaymentResponse])
 async def get_user_payments(
     user_id: str,
@@ -49,7 +45,6 @@ async def get_user_payments(
     service = PaymentService(db)
     payments = service.get_user_payments(user_id, limit)
     return payments
-
 
 @router.put("/{payment_id}/status")
 async def update_payment_status(
@@ -68,7 +63,6 @@ async def update_payment_status(
         )
     return {"message": "Payment status updated successfully"}
 
-
 @router.post("/webhook")
 async def process_payment_webhook(
     webhook_data: dict,
@@ -83,7 +77,6 @@ async def process_payment_webhook(
             detail="Failed to process webhook"
         )
     return {"message": "Webhook processed successfully"}
-
 
 @router.post("/intent", response_model=PaymentIntentResponse)
 async def create_payment_intent(
@@ -100,7 +93,6 @@ async def create_payment_intent(
         currency=intent_data.currency
     )
 
-
 @router.post("/cashback", response_model=CashbackResponse)
 async def create_cashback(
     cashback_data: CashbackCreate,
@@ -111,14 +103,12 @@ async def create_cashback(
     cashback = service.create_cashback(cashback_data)
     return cashback
 
-
 @router.get("/cashback/user/{user_id}", response_model=List[CashbackResponse])
 async def get_user_cashbacks(user_id: str, db: Session = Depends(get_db)):
     """Получить кэшбеки пользователя"""
     service = PaymentService(db)
     cashbacks = service.get_user_cashbacks(user_id)
     return cashbacks
-
 
 @router.put("/cashback/{cashback_id}/approve")
 async def approve_cashback(cashback_id: str, db: Session = Depends(get_db)):
@@ -132,7 +122,6 @@ async def approve_cashback(cashback_id: str, db: Session = Depends(get_db)):
         )
     return {"message": "Cashback approved successfully"}
 
-
 @router.put("/cashback/{cashback_id}/pay")
 async def pay_cashback(cashback_id: str, db: Session = Depends(get_db)):
     """Выплатить кэшбек"""
@@ -145,7 +134,6 @@ async def pay_cashback(cashback_id: str, db: Session = Depends(get_db)):
         )
     return {"message": "Cashback paid successfully"}
 
-
 @router.post("/referral", response_model=ReferralResponse)
 async def create_referral(
     referral_data: ReferralCreate,
@@ -156,14 +144,12 @@ async def create_referral(
     referral = service.create_referral(referral_data)
     return referral
 
-
 @router.get("/referral/user/{user_id}", response_model=List[ReferralResponse])
-async def get_user_referrals(user_id: str, db: Session = Depends(get_db)):
+async def get_referrals(user_id: str, db: Session = Depends(get_db)):
     """Получить рефералы пользователя"""
     service = PaymentService(db)
-    referrals = service.get_user_referrals(user_id)
+    referrals = service.get_referrals(user_id)
     return referrals
-
 
 @router.put("/referral/{referral_id}/complete")
 async def complete_referral(referral_id: str, db: Session = Depends(get_db)):
@@ -177,14 +163,12 @@ async def complete_referral(referral_id: str, db: Session = Depends(get_db)):
         )
     return {"message": "Referral completed successfully"}
 
-
 @router.get("/referral/user/{user_id}/stats")
 async def get_referral_stats(user_id: str, db: Session = Depends(get_db)):
     """Получить статистику рефералов"""
     service = PaymentService(db)
     stats = service.get_referral_stats(user_id)
     return stats
-
 
 @router.post("/subscription")
 async def process_subscription_payment(
@@ -197,5 +181,3 @@ async def process_subscription_payment(
     service = PaymentService(db)
     result = service.process_subscription_payment(user_id, subscription_tier, amount)
     return result
-
-

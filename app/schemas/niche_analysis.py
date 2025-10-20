@@ -1,22 +1,18 @@
 """
 Pydantic schemas for niche analysis and beginner guidance
 """
-from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 from enum import Enum
-
 
 class ExperienceLevel(str, Enum):
     COMPLETE_BEGINNER = "complete_beginner"
     SOME_EXPERIENCE = "some_experience"
     EXPERIENCED = "experienced"
 
-
 class NicheAnalysisRequest(BaseModel):
     """Request schema for niche analysis"""
     niche: str = Field(..., description="Niche to analyze")
     keywords: List[str] = Field(..., description="Keywords to search for in the niche")
-
 
 class NicheAnalysisResponse(BaseModel):
     """Response schema for niche analysis"""
@@ -34,13 +30,11 @@ class NicheAnalysisResponse(BaseModel):
     growth_potential: float = Field(..., ge=0, le=1, description="Growth potential (0-1)")
     recommendation_score: float = Field(..., ge=0, le=1, description="Overall recommendation score")
 
-
 class SupplierSearchRequest(BaseModel):
     """Request schema for supplier search"""
     product_name: str = Field(..., description="Product name to find suppliers for")
     category: str = Field(..., description="Product category")
     budget: float = Field(..., gt=0, description="Maximum budget per unit")
-
 
 class SupplierInfo(BaseModel):
     """Schema for supplier information"""
@@ -56,7 +50,6 @@ class SupplierInfo(BaseModel):
     total_cost: float = Field(..., description="Total cost per unit")
     contact_info: Dict[str, str] = Field(..., description="Contact information")
 
-
 class SupplierSearchResponse(BaseModel):
     """Response schema for supplier search"""
     product_name: str
@@ -65,14 +58,12 @@ class SupplierSearchResponse(BaseModel):
     suppliers_found: int = Field(..., description="Number of suppliers found")
     suppliers: List[SupplierInfo] = Field(..., description="List of suppliers")
 
-
 class PricingRequest(BaseModel):
     """Request schema for pricing calculation"""
     product_name: str = Field(..., description="Product name")
     category: str = Field(..., description="Product category")
     supplier_cost: float = Field(..., gt=0, description="Supplier cost per unit")
     target_margin: float = Field(..., ge=0, le=1, description="Target profit margin (0-1)")
-
 
 class PricingResponse(BaseModel):
     """Response schema for pricing calculation"""
@@ -87,12 +78,10 @@ class PricingResponse(BaseModel):
     supplier_cost: float = Field(..., description="Supplier cost per unit")
     target_margin: float = Field(..., description="Target profit margin")
 
-
 class BeginnerRecommendationsRequest(BaseModel):
     """Request schema for beginner recommendations"""
     budget: float = Field(..., gt=0, description="Available budget")
     experience_level: ExperienceLevel = Field(..., description="Experience level")
-
 
 class NicheRecommendation(BaseModel):
     """Schema for niche recommendation"""
@@ -104,7 +93,6 @@ class NicheRecommendation(BaseModel):
     growth_potential: float = Field(..., ge=0, le=1, description="Growth potential")
     profit_margin: float = Field(..., ge=0, le=1, description="Profit margin")
 
-
 class BeginnerRecommendationsResponse(BaseModel):
     """Response schema for beginner recommendations"""
     budget: float
@@ -112,7 +100,6 @@ class BeginnerRecommendationsResponse(BaseModel):
     recommendations: List[NicheRecommendation] = Field(..., description="Top niche recommendations")
     general_tips: List[str] = Field(..., description="General tips for beginners")
     next_steps: List[str] = Field(..., description="Next steps to take")
-
 
 class ProfitCalculationRequest(BaseModel):
     """Request schema for profit calculation"""
@@ -122,7 +109,6 @@ class ProfitCalculationRequest(BaseModel):
     marketplace_fees: float = Field(0.1, ge=0, le=1, description="Marketplace fees (0-1)")
     shipping_cost: float = Field(0, ge=0, description="Shipping cost per unit")
     other_costs: float = Field(0, ge=0, description="Other costs per unit")
-
 
 class ProfitCalculationResponse(BaseModel):
     """Response schema for profit calculation"""
@@ -135,13 +121,11 @@ class ProfitCalculationResponse(BaseModel):
     cost_breakdown: Dict[str, float] = Field(..., description="Cost breakdown")
     recommendations: List[str] = Field(..., description="Recommendations based on margin")
 
-
 class MarketAnalysisRequest(BaseModel):
     """Request schema for market analysis"""
     niche: str = Field(..., description="Niche to analyze")
     keywords: List[str] = Field(..., description="Keywords to analyze")
     time_period_days: int = Field(30, ge=1, le=365, description="Time period for analysis")
-
 
 class MarketAnalysisResponse(BaseModel):
     """Response schema for market analysis"""
@@ -155,13 +139,11 @@ class MarketAnalysisResponse(BaseModel):
     seasonal_patterns: Dict[str, Any] = Field(..., description="Seasonal pattern analysis")
     recommendations: List[str] = Field(..., description="Market recommendations")
 
-
 class ProductResearchRequest(BaseModel):
     """Request schema for product research"""
     product_name: str = Field(..., description="Product name to research")
     category: str = Field(..., description="Product category")
     marketplaces: List[str] = Field(..., description="Marketplaces to search")
-
 
 class ProductResearchResponse(BaseModel):
     """Response schema for product research"""
@@ -174,13 +156,11 @@ class ProductResearchResponse(BaseModel):
     trend_analysis: Dict[str, Any] = Field(..., description="Trend analysis")
     recommendations: List[str] = Field(..., description="Product recommendations")
 
-
 class BeginnerGuideRequest(BaseModel):
     """Request schema for beginner guide"""
     experience_level: ExperienceLevel = Field(..., description="Experience level")
     interests: List[str] = Field(..., description="Areas of interest")
     budget: float = Field(..., gt=0, description="Available budget")
-
 
 class BeginnerGuideResponse(BaseModel):
     """Response schema for beginner guide"""
@@ -191,5 +171,3 @@ class BeginnerGuideResponse(BaseModel):
     recommended_actions: List[str] = Field(..., description="Recommended actions")
     resources: List[Dict[str, str]] = Field(..., description="Helpful resources")
     timeline: Dict[str, str] = Field(..., description="Recommended timeline")
-
-

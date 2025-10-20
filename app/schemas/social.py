@@ -1,10 +1,7 @@
 """Pydantic схемы для социальных функций и геймификации"""
 
-from datetime import datetime
-from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 from enum import Enum
-
 
 class PostType(str, Enum):
     """Типы постов"""
@@ -14,7 +11,6 @@ class PostType(str, Enum):
     LINK = "link"
     ITEM = "item"
 
-
 class LikeType(str, Enum):
     """Типы лайков"""
     LIKE = "like"
@@ -23,14 +19,12 @@ class LikeType(str, Enum):
     ANGRY = "angry"
     SAD = "sad"
 
-
 class MessageType(str, Enum):
     """Типы сообщений"""
     TEXT = "text"
     IMAGE = "image"
     FILE = "file"
     STICKER = "sticker"
-
 
 class NotificationType(str, Enum):
     """Типы уведомлений"""
@@ -42,7 +36,6 @@ class NotificationType(str, Enum):
     ACHIEVEMENT = "achievement"
     GROUP_INVITE = "group_invite"
     MENTION = "mention"
-
 
 class UserProfileBase(BaseModel):
     """Базовая схема профиля пользователя"""
@@ -58,11 +51,9 @@ class UserProfileBase(BaseModel):
     allow_friend_requests: bool = True
     allow_messages: bool = True
 
-
 class UserProfileCreate(UserProfileBase):
     """Схема создания профиля пользователя"""
     user_id: str
-
 
 class UserProfileUpdate(BaseModel):
     """Схема обновления профиля пользователя"""
@@ -77,7 +68,6 @@ class UserProfileUpdate(BaseModel):
     show_phone: Optional[bool] = None
     allow_friend_requests: Optional[bool] = None
     allow_messages: Optional[bool] = None
-
 
 class UserProfileResponse(UserProfileBase):
     """Схема ответа профиля пользователя"""
@@ -94,7 +84,6 @@ class UserProfileResponse(UserProfileBase):
     class Config:
         from_attributes = True
 
-
 class GroupBase(BaseModel):
     """Базовая схема группы"""
     name: str
@@ -106,11 +95,9 @@ class GroupBase(BaseModel):
     requires_approval: bool = False
     max_members: Optional[int] = None
 
-
 class GroupCreate(GroupBase):
     """Схема создания группы"""
     pass
-
 
 class GroupUpdate(BaseModel):
     """Схема обновления группы"""
@@ -123,7 +110,6 @@ class GroupUpdate(BaseModel):
     requires_approval: Optional[bool] = None
     max_members: Optional[int] = None
 
-
 class GroupResponse(GroupBase):
     """Схема ответа группы"""
     id: str
@@ -135,7 +121,6 @@ class GroupResponse(GroupBase):
 
     class Config:
         from_attributes = True
-
 
 class AchievementBase(BaseModel):
     """Базовая схема достижения"""
@@ -151,11 +136,9 @@ class AchievementBase(BaseModel):
     badge_reward: Optional[str] = None
     is_hidden: bool = False
 
-
 class AchievementCreate(AchievementBase):
     """Схема создания достижения"""
     pass
-
 
 class AchievementResponse(AchievementBase):
     """Схема ответа достижения"""
@@ -166,7 +149,6 @@ class AchievementResponse(AchievementBase):
 
     class Config:
         from_attributes = True
-
 
 class UserAchievementResponse(BaseModel):
     """Схема ответа достижения пользователя"""
@@ -183,7 +165,6 @@ class UserAchievementResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
 class SocialPostBase(BaseModel):
     """Базовая схема социального поста"""
     content: str
@@ -192,13 +173,11 @@ class SocialPostBase(BaseModel):
     is_public: bool = True
     allow_comments: bool = True
 
-
 class SocialPostCreate(SocialPostBase):
     """Схема создания социального поста"""
     group_id: Optional[str] = None
     item_id: Optional[str] = None
     marketplace: Optional[str] = None
-
 
 class SocialPostUpdate(BaseModel):
     """Схема обновления социального поста"""
@@ -207,7 +186,6 @@ class SocialPostUpdate(BaseModel):
     is_public: Optional[bool] = None
     allow_comments: Optional[bool] = None
     is_pinned: Optional[bool] = None
-
 
 class SocialPostResponse(SocialPostBase):
     """Схема ответа социального поста"""
@@ -228,18 +206,15 @@ class SocialPostResponse(SocialPostBase):
     class Config:
         from_attributes = True
 
-
 class CommentBase(BaseModel):
     """Базовая схема комментария"""
     content: str
     media_urls: Optional[List[str]] = None
 
-
 class CommentCreate(CommentBase):
     """Схема создания комментария"""
     post_id: str
     parent_id: Optional[str] = None
-
 
 class CommentResponse(CommentBase):
     """Схема ответа комментария"""
@@ -256,13 +231,11 @@ class CommentResponse(CommentBase):
     class Config:
         from_attributes = True
 
-
 class LikeCreate(BaseModel):
     """Схема создания лайка"""
     post_id: Optional[str] = None
     comment_id: Optional[str] = None
     like_type: LikeType = LikeType.LIKE
-
 
 class LikeResponse(BaseModel):
     """Схема ответа лайка"""
@@ -276,18 +249,15 @@ class LikeResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
 class MessageBase(BaseModel):
     """Базовая схема сообщения"""
     content: str
     media_urls: Optional[List[str]] = None
     message_type: MessageType = MessageType.TEXT
 
-
 class MessageCreate(MessageBase):
     """Схема создания сообщения"""
     receiver_id: str
-
 
 class MessageResponse(MessageBase):
     """Схема ответа сообщения"""
@@ -303,7 +273,6 @@ class MessageResponse(MessageBase):
     class Config:
         from_attributes = True
 
-
 class LeaderboardBase(BaseModel):
     """Базовая схема лидерборда"""
     name: str
@@ -312,11 +281,9 @@ class LeaderboardBase(BaseModel):
     period: str = "all"
     max_entries: int = 100
 
-
 class LeaderboardCreate(LeaderboardBase):
     """Схема создания лидерборда"""
     pass
-
 
 class LeaderboardResponse(LeaderboardBase):
     """Схема ответа лидерборда"""
@@ -327,7 +294,6 @@ class LeaderboardResponse(LeaderboardBase):
 
     class Config:
         from_attributes = True
-
 
 class LeaderboardEntryResponse(BaseModel):
     """Схема ответа записи лидерборда"""
@@ -343,7 +309,6 @@ class LeaderboardEntryResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
 
 class NotificationResponse(BaseModel):
     """Схема ответа уведомления"""
@@ -361,21 +326,17 @@ class NotificationResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
 class FriendshipRequest(BaseModel):
     """Схема запроса дружбы"""
     friend_id: str
-
 
 class FollowRequest(BaseModel):
     """Схема подписки"""
     following_id: str
 
-
 class GroupJoinRequest(BaseModel):
     """Схема вступления в группу"""
     group_id: str
-
 
 class SocialFeedResponse(BaseModel):
     """Схема ответа социальной ленты"""
@@ -383,7 +344,6 @@ class SocialFeedResponse(BaseModel):
     total: int
     page: int
     has_more: bool
-
 
 class UserStatsResponse(BaseModel):
     """Схема статистики пользователя"""
@@ -401,7 +361,6 @@ class UserStatsResponse(BaseModel):
     achievements_count: int
     groups_count: int
 
-
 class GamificationPointsResponse(BaseModel):
     """Схема ответа очков геймификации"""
     user_id: str
@@ -411,5 +370,3 @@ class GamificationPointsResponse(BaseModel):
     points_to_next_level: int
     recent_earnings: List[Dict[str, Any]]
     achievements_unlocked: List[UserAchievementResponse]
-
-

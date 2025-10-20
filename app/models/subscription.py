@@ -1,8 +1,7 @@
 """Модели подписок и биллинга"""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Optional
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, Float, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
@@ -10,13 +9,11 @@ import uuid
 
 from app.core.database import Base
 
-
 class SubscriptionTier(str, Enum):
     """Уровни подписки"""
     FREE = "free"
     PRO = "pro"
     PREMIUM = "premium"
-
 
 class PaymentStatus(str, Enum):
     """Статусы платежей"""
@@ -25,7 +22,6 @@ class PaymentStatus(str, Enum):
     FAILED = "failed"
     REFUNDED = "refunded"
     CANCELLED = "cancelled"
-
 
 class Subscription(Base):
     """Модель подписки пользователя"""
@@ -60,7 +56,6 @@ class Subscription(Base):
         delta = self.end_date - datetime.utcnow()
         return max(0, delta.days)
 
-
 class Payment(Base):
     """Модель платежа"""
     __tablename__ = "payments"
@@ -81,7 +76,6 @@ class Payment(Base):
     user = relationship("User", back_populates="payments")
     subscription = relationship("Subscription", back_populates="payments")
 
-
 class Cashback(Base):
     """Модель кэшбека"""
     __tablename__ = "cashbacks"
@@ -99,7 +93,6 @@ class Cashback(Base):
     # Связи
     user = relationship("User", back_populates="cashbacks")
 
-
 class Referral(Base):
     """Модель реферальной программы"""
     __tablename__ = "referrals"
@@ -115,7 +108,6 @@ class Referral(Base):
     # Связи
     referrer = relationship("User", foreign_keys=[referrer_id], back_populates="referrals_sent")
     referred = relationship("User", foreign_keys=[referred_id], back_populates="referrals_received")
-
 
 class SubscriptionPlan(Base):
     """Модель тарифных планов"""
@@ -136,14 +128,10 @@ class SubscriptionPlan(Base):
         """Получить список функций"""
         if not self.features:
             return []
-        import json
         return json.loads(self.features)
 
     def get_limits_dict(self) -> dict:
         """Получить словарь ограничений"""
         if not self.limits:
             return {}
-        import json
         return json.loads(self.limits)
-
-

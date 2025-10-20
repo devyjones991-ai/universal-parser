@@ -1,7 +1,6 @@
 """
 API endpoints for AI and Machine Learning features
 """
-from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from sqlalchemy.orm import Session
 from app.core.database import get_db
@@ -19,7 +18,6 @@ router = APIRouter()
 # Initialize AI service
 ai_service = PricePredictionService()
 
-
 @router.post("/predict", response_model=PredictionResponse)
 async def predict_price(
     request: PredictionRequest,
@@ -31,16 +29,15 @@ async def predict_price(
             item_data=request.item_data,
             days_ahead=request.days_ahead
         )
-        
+
         if "error" in result:
             raise HTTPException(status_code=400, detail=result["error"])
-        
-        return PredictionResponse(**result)
-        
-    except Exception as e:
-        logger.error(f"Price prediction error: {e}")
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
 
+        return PredictionResponse(**result)
+
+    except Exception as e:
+        logger.error("Price prediction error: {e}")
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
 
 @router.post("/train", response_model=Dict[str, Any])
 async def train_models(
@@ -61,18 +58,17 @@ async def train_models(
             },
             # Add more historical data here
         ]
-        
+
         result = await ai_service.train_models(historical_data)
-        
+
         if "error" in result:
             raise HTTPException(status_code=400, detail=result["error"])
-        
-        return result
-        
-    except Exception as e:
-        logger.error(f"Model training error: {e}")
-        raise HTTPException(status_code=500, detail=f"Training failed: {str(e)}")
 
+        return result
+
+    except Exception as e:
+        logger.error("Model training error: {e}")
+        raise HTTPException(status_code=500, detail=f"Training failed: {str(e)}")
 
 @router.post("/anomalies", response_model=List[AnomalyResponse])
 async def detect_anomalies(
@@ -82,13 +78,12 @@ async def detect_anomalies(
     """Detect price anomalies in historical data"""
     try:
         anomalies = await ai_service.detect_anomalies(data)
-        
-        return [AnomalyResponse(**anomaly) for anomaly in anomalies]
-        
-    except Exception as e:
-        logger.error(f"Anomaly detection error: {e}")
-        raise HTTPException(status_code=500, detail=f"Anomaly detection failed: {str(e)}")
 
+        return [AnomalyResponse(**anomaly) for anomaly in anomalies]
+
+    except Exception as e:
+        logger.error("Anomaly detection error: {e}")
+        raise HTTPException(status_code=500, detail=f"Anomaly detection failed: {str(e)}")
 
 @router.post("/trends", response_model=TrendAnalysisResponse)
 async def analyze_trends(
@@ -98,16 +93,15 @@ async def analyze_trends(
     """Analyze price trends and seasonality"""
     try:
         trends = await ai_service.analyze_trends(data)
-        
+
         if "error" in trends:
             raise HTTPException(status_code=400, detail=trends["error"])
-        
-        return TrendAnalysisResponse(**trends)
-        
-    except Exception as e:
-        logger.error(f"Trend analysis error: {e}")
-        raise HTTPException(status_code=500, detail=f"Trend analysis failed: {str(e)}")
 
+        return TrendAnalysisResponse(**trends)
+
+    except Exception as e:
+        logger.error("Trend analysis error: {e}")
+        raise HTTPException(status_code=500, detail=f"Trend analysis failed: {str(e)}")
 
 @router.post("/recommendations", response_model=List[RecommendationResponse])
 async def get_recommendations(
@@ -118,13 +112,12 @@ async def get_recommendations(
     """Get AI-powered item recommendations"""
     try:
         recommendations = await ai_service.get_recommendations(user_items, all_items)
-        
-        return [RecommendationResponse(**rec) for rec in recommendations]
-        
-    except Exception as e:
-        logger.error(f"Recommendation error: {e}")
-        raise HTTPException(status_code=500, detail=f"Recommendations failed: {str(e)}")
 
+        return [RecommendationResponse(**rec) for rec in recommendations]
+
+    except Exception as e:
+        logger.error("Recommendation error: {e}")
+        raise HTTPException(status_code=500, detail=f"Recommendations failed: {str(e)}")
 
 @router.get("/models/performance", response_model=ModelPerformanceResponse)
 async def get_model_performance():
@@ -132,21 +125,19 @@ async def get_model_performance():
     try:
         performance = await ai_service.get_model_performance()
         return ModelPerformanceResponse(performance=performance)
-        
-    except Exception as e:
-        logger.error(f"Model performance error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get model performance: {str(e)}")
 
+    except Exception as e:
+        logger.error("Model performance error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get model performance  # noqa  # noqa: E501 E501 {str(e)}")
 
 @router.get("/health")
 async def ai_health_check():
     """Health check for AI service"""
     try:
         # Check if models directory exists
-        import os
         models_dir = "models"
         models_exist = os.path.exists(models_dir) and len(os.listdir(models_dir)) > 0
-        
+
         return {
             "status": "healthy",
             "models_available": models_exist,
@@ -154,32 +145,29 @@ async def ai_health_check():
             "timestamp": time.time()
         }
     except Exception as e:
-        logger.error(f"AI health check failed: {e}")
+        logger.error("AI health check failed: {e}")
         return {
             "status": "unhealthy",
             "error": str(e),
             "timestamp": time.time()
         }
 
-
 @router.delete("/models")
 async def clear_models():
     """Clear all trained models"""
     try:
         import shutil
-        import os
-        
+
         models_dir = "models"
         if os.path.exists(models_dir):
             shutil.rmtree(models_dir)
             os.makedirs(models_dir, exist_ok=True)
-        
-        return {"message": "All models cleared successfully"}
-        
-    except Exception as e:
-        logger.error(f"Clear models error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to clear models: {str(e)}")
 
+        return {"message": "All models cleared successfully"}
+
+    except Exception as e:
+        logger.error("Clear models error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to clear models: {str(e)}")
 
 @router.get("/insights")
 async def get_ai_insights(
@@ -202,11 +190,9 @@ async def get_ai_insights(
             },
             "timestamp": time.time()
         }
-        
+
         return insights
-        
+
     except Exception as e:
-        logger.error(f"AI insights error: {e}")
+        logger.error("AI insights error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get insights: {str(e)}")
-
-

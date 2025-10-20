@@ -1,19 +1,15 @@
 """Pydantic схемы для подписок и биллинга"""
 
-from datetime import datetime
-from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 from enum import Enum
 
 from app.models.subscription import SubscriptionTier, PaymentStatus
-
 
 class SubscriptionTierSchema(str, Enum):
     """Схема уровней подписки"""
     FREE = "free"
     PRO = "pro"
     PREMIUM = "premium"
-
 
 class PaymentStatusSchema(str, Enum):
     """Схема статусов платежей"""
@@ -23,19 +19,16 @@ class PaymentStatusSchema(str, Enum):
     REFUNDED = "refunded"
     CANCELLED = "cancelled"
 
-
 class SubscriptionBase(BaseModel):
     """Базовая схема подписки"""
     tier: SubscriptionTierSchema
     status: str = "active"
     auto_renew: bool = True
 
-
 class SubscriptionCreate(SubscriptionBase):
     """Схема создания подписки"""
     user_id: str
     end_date: Optional[datetime] = None
-
 
 class SubscriptionUpdate(BaseModel):
     """Схема обновления подписки"""
@@ -43,7 +36,6 @@ class SubscriptionUpdate(BaseModel):
     status: Optional[str] = None
     auto_renew: Optional[bool] = None
     end_date: Optional[datetime] = None
-
 
 class SubscriptionResponse(SubscriptionBase):
     """Схема ответа подписки"""
@@ -59,7 +51,6 @@ class SubscriptionResponse(SubscriptionBase):
     class Config:
         from_attributes = True
 
-
 class PaymentBase(BaseModel):
     """Базовая схема платежа"""
     amount: float
@@ -67,18 +58,15 @@ class PaymentBase(BaseModel):
     payment_method: str
     description: Optional[str] = None
 
-
 class PaymentCreate(PaymentBase):
     """Схема создания платежа"""
     user_id: str
     subscription_id: Optional[str] = None
 
-
 class PaymentUpdate(BaseModel):
     """Схема обновления платежа"""
     status: Optional[PaymentStatusSchema] = None
     external_id: Optional[str] = None
-
 
 class PaymentResponse(PaymentBase):
     """Схема ответа платежа"""
@@ -93,7 +81,6 @@ class PaymentResponse(PaymentBase):
     class Config:
         from_attributes = True
 
-
 class CashbackBase(BaseModel):
     """Базовая схема кэшбека"""
     amount: float
@@ -101,11 +88,9 @@ class CashbackBase(BaseModel):
     source: str
     description: Optional[str] = None
 
-
 class CashbackCreate(CashbackBase):
     """Схема создания кэшбека"""
     user_id: str
-
 
 class CashbackResponse(CashbackBase):
     """Схема ответа кэшбека"""
@@ -118,17 +103,14 @@ class CashbackResponse(CashbackBase):
     class Config:
         from_attributes = True
 
-
 class ReferralBase(BaseModel):
     """Базовая схема реферала"""
     referred_id: str
     reward_amount: float = 0.0
 
-
 class ReferralCreate(ReferralBase):
     """Схема создания реферала"""
     referrer_id: str
-
 
 class ReferralResponse(ReferralBase):
     """Схема ответа реферала"""
@@ -141,7 +123,6 @@ class ReferralResponse(ReferralBase):
     class Config:
         from_attributes = True
 
-
 class SubscriptionPlanBase(BaseModel):
     """Базовая схема тарифного плана"""
     name: str
@@ -151,11 +132,9 @@ class SubscriptionPlanBase(BaseModel):
     features: List[str] = []
     limits: Dict[str, Any] = {}
 
-
 class SubscriptionPlanCreate(SubscriptionPlanBase):
     """Схема создания тарифного плана"""
     pass
-
 
 class SubscriptionPlanUpdate(BaseModel):
     """Схема обновления тарифного плана"""
@@ -165,7 +144,6 @@ class SubscriptionPlanUpdate(BaseModel):
     features: Optional[List[str]] = None
     limits: Optional[Dict[str, Any]] = None
     is_active: Optional[bool] = None
-
 
 class SubscriptionPlanResponse(SubscriptionPlanBase):
     """Схема ответа тарифного плана"""
@@ -177,7 +155,6 @@ class SubscriptionPlanResponse(SubscriptionPlanBase):
     class Config:
         from_attributes = True
 
-
 class BillingSummary(BaseModel):
     """Схема сводки по биллингу"""
     current_subscription: Optional[SubscriptionResponse]
@@ -187,7 +164,6 @@ class BillingSummary(BaseModel):
     next_payment_date: Optional[datetime]
     referral_rewards: float
 
-
 class PaymentIntentCreate(BaseModel):
     """Схема создания намерения платежа"""
     amount: float
@@ -195,12 +171,9 @@ class PaymentIntentCreate(BaseModel):
     subscription_tier: SubscriptionTierSchema
     payment_method: str = "stripe"
 
-
 class PaymentIntentResponse(BaseModel):
     """Схема ответа намерения платежа"""
     client_secret: str
     payment_intent_id: str
     amount: float
     currency: str
-
-

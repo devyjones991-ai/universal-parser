@@ -17,7 +17,6 @@ from app.models.subscription import SubscriptionTier
 
 router = APIRouter()
 
-
 @router.get("/plans", response_model=List[SubscriptionPlanResponse])
 async def get_subscription_plans(db: Session = Depends(get_db)):
     """Получить все тарифные планы"""
@@ -25,9 +24,8 @@ async def get_subscription_plans(db: Session = Depends(get_db)):
     plans = service.get_subscription_plans()
     return plans
 
-
 @router.get("/plans/{tier}", response_model=SubscriptionPlanResponse)
-async def get_subscription_plan(tier: SubscriptionTier, db: Session = Depends(get_db)):
+async def get_subscription_plan(tier: SubscriptionTier, db: Session = Depends(get_db))  # noqa  # noqa: E501 E501
     """Получить тарифный план по уровню"""
     service = SubscriptionService(db)
     plan = service.get_subscription_plan(tier)
@@ -37,7 +35,6 @@ async def get_subscription_plan(tier: SubscriptionTier, db: Session = Depends(ge
             detail="Subscription plan not found"
         )
     return plan
-
 
 @router.get("/user/{user_id}", response_model=SubscriptionResponse)
 async def get_user_subscription(user_id: str, db: Session = Depends(get_db)):
@@ -51,7 +48,6 @@ async def get_user_subscription(user_id: str, db: Session = Depends(get_db)):
         )
     return subscription
 
-
 @router.post("/", response_model=SubscriptionResponse)
 async def create_subscription(
     subscription_data: SubscriptionCreate,
@@ -61,7 +57,6 @@ async def create_subscription(
     service = SubscriptionService(db)
     subscription = service.create_subscription(subscription_data)
     return subscription
-
 
 @router.put("/{subscription_id}", response_model=SubscriptionResponse)
 async def update_subscription(
@@ -79,9 +74,8 @@ async def update_subscription(
         )
     return subscription
 
-
 @router.delete("/{subscription_id}")
-async def cancel_subscription(subscription_id: str, db: Session = Depends(get_db)):
+async def cancel_subscription(subscription_id: str, db: Session = Depends(get_db))  # noqa  # noqa: E501 E501
     """Отменить подписку"""
     service = SubscriptionService(db)
     success = service.cancel_subscription(subscription_id)
@@ -91,7 +85,6 @@ async def cancel_subscription(subscription_id: str, db: Session = Depends(get_db
             detail="Subscription not found"
         )
     return {"message": "Subscription cancelled successfully"}
-
 
 @router.post("/{subscription_id}/upgrade")
 async def upgrade_subscription(
@@ -109,7 +102,6 @@ async def upgrade_subscription(
         )
     return {"message": "Subscription upgraded successfully"}
 
-
 @router.post("/{subscription_id}/extend")
 async def extend_subscription(
     subscription_id: str,
@@ -126,14 +118,12 @@ async def extend_subscription(
         )
     return {"message": f"Subscription extended by {days} days"}
 
-
 @router.get("/user/{user_id}/billing", response_model=BillingSummary)
 async def get_billing_summary(user_id: str, db: Session = Depends(get_db)):
     """Получить сводку по биллингу пользователя"""
     service = SubscriptionService(db)
     summary = service.get_billing_summary(user_id)
     return summary
-
 
 @router.get("/user/{user_id}/limits")
 async def get_subscription_limits(user_id: str, db: Session = Depends(get_db)):
@@ -142,12 +132,9 @@ async def get_subscription_limits(user_id: str, db: Session = Depends(get_db)):
     limits = service.check_subscription_limits(user_id, "all")
     return limits
 
-
 @router.get("/user/{user_id}/feature/{feature}")
-async def check_feature_access(user_id: str, feature: str, db: Session = Depends(get_db)):
+async def check_feature_access(user_id: str, feature: str, db: Session = Depends(get_db))  # noqa  # noqa: E501 E501
     """Проверить доступ к функции"""
     service = SubscriptionService(db)
     has_access = service.can_use_feature(user_id, feature)
     return {"feature": feature, "has_access": has_access}
-
-

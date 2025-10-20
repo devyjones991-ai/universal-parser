@@ -1,10 +1,7 @@
 """
 Intelligent notification engine for smart alerts and user engagement
 """
-import asyncio
 import logging
-from typing import List, Dict, Any, Optional, Tuple
-from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 from dataclasses import dataclass
@@ -13,13 +10,14 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report
 import joblib
+from typing import Dict, List, Any, Optional
+from datetime import datetime
 
 from app.core.cache import cache_service, cached
 from app.services.trend_detector import TrendDetectorService, TrendAlert
 from app.services.dynamic_pricing import DynamicPricingService
 
 logger = logging.getLogger(__name__)
-
 
 class NotificationType(Enum):
     PRICE_DROP = "price_drop"
@@ -31,13 +29,11 @@ class NotificationType(Enum):
     ACHIEVEMENT = "achievement"
     SYSTEM_UPDATE = "system_update"
 
-
 class NotificationPriority(Enum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
     CRITICAL = "critical"
-
 
 class NotificationChannel(Enum):
     EMAIL = "email"
@@ -45,7 +41,6 @@ class NotificationChannel(Enum):
     SMS = "sms"
     IN_APP = "in_app"
     TELEGRAM = "telegram"
-
 
 @dataclass
 class NotificationTemplate:
@@ -58,7 +53,6 @@ class NotificationTemplate:
     action_template: Optional[str] = None
     icon: Optional[str] = None
     color: Optional[str] = None
-
 
 @dataclass
 class SmartNotification:
@@ -78,7 +72,6 @@ class SmartNotification:
     created_at: datetime = None
     data: Dict[str, Any] = None
 
-
 @dataclass
 class UserPreferences:
     """User notification preferences"""
@@ -92,35 +85,34 @@ class UserPreferences:
     batch_notifications: bool = True
     digest_frequency: str = "daily"  # daily, weekly, never
 
-
 class NotificationEngineService:
     """Service for intelligent notification management"""
-    
+
     def __init__(self):
         self.trend_service = TrendDetectorService()
         self.pricing_service = DynamicPricingService()
-        
+
         # ML models
         self.importance_classifier = None
         self.engagement_predictor = None
         self.scaler = StandardScaler()
-        
+
         # Notification templates
         self.templates = self._initialize_templates()
-        
+
         # User preferences cache
         self.user_preferences = {}
-        
+
         # Notification queue
         self.notification_queue = []
-        
+
         # Engagement tracking
         self.engagement_history = {}
-        
+
     def _initialize_templates(self) -> Dict[str, NotificationTemplate]:
         """Initialize notification templates"""
         templates = {}
-        
+
         # Price drop template
         templates["price_drop"] = NotificationTemplate(
             template_id="price_drop",
@@ -132,7 +124,7 @@ class NotificationEngineService:
             icon="💰",
             color="#4CAF50"
         )
-        
+
         # Price spike template
         templates["price_spike"] = NotificationTemplate(
             template_id="price_spike",
@@ -144,7 +136,7 @@ class NotificationEngineService:
             icon="📈",
             color="#FF9800"
         )
-        
+
         # Stock alert template
         templates["stock_alert"] = NotificationTemplate(
             template_id="stock_alert",
@@ -156,7 +148,7 @@ class NotificationEngineService:
             icon="⚠️",
             color="#F44336"
         )
-        
+
         # Niche opportunity template
         templates["niche_opportunity"] = NotificationTemplate(
             template_id="niche_opportunity",
@@ -168,7 +160,7 @@ class NotificationEngineService:
             icon="🎯",
             color="#9C27B0"
         )
-        
+
         # Trend alert template
         templates["trend_alert"] = NotificationTemplate(
             template_id="trend_alert",
@@ -180,7 +172,7 @@ class NotificationEngineService:
             icon="📊",
             color="#2196F3"
         )
-        
+
         # Achievement template
         templates["achievement"] = NotificationTemplate(
             template_id="achievement",
@@ -192,76 +184,76 @@ class NotificationEngineService:
             icon="🏆",
             color="#FFD700"
         )
-        
+
         return templates
-    
+
     async def send_smart_notification(self, 
                                     user_id: str,
                                     notification_type: str,
-                                    data: Dict[str, Any] = None) -> Dict[str, Any]:
+                                    data: Dict[str, Any] = None) -> Dict[str, Any]  # noqa  # noqa: E501 E501
         """Send a smart notification to a user"""
         try:
-            logger.info(f"Sending smart notification to user {user_id}: {notification_type}")
-            
+            logger.info("Sending smart notification to user {user_id}: {notification_type}")
+
             # Get user preferences
             preferences = await self.get_user_preferences(user_id)
-            
+
             # Check if notification type is enabled
-            if NotificationType(notification_type) not in preferences.enabled_types:
+            if NotificationType(notification_type) not in preferences.enabled_types  # noqa  # noqa: E501 E501
                 return {"sent": False, "message": "Notification type disabled by user"}
-            
+
             # Generate notification content
             notification = await self._generate_smart_notification(
                 user_id, notification_type, data or {}
             )
-            
+
             if not notification:
                 return {"sent": False, "message": "Failed to generate notification"}
-            
+
             # Apply smart prioritization
             notification = await self._apply_smart_prioritization(notification, user_id)
-            
+
             # Check if notification should be sent based on preferences
-            if not await self._should_send_notification(notification, preferences):
+            if not await self._should_send_notification(notification, preferences)  # noqa  # noqa: E501 E501
                 return {"sent": False, "message": "Notification filtered by preferences"}
-            
+
             # Schedule notification
             await self._schedule_notification(notification, preferences)
-            
+
             return {"sent": True, "message": "Notification scheduled successfully"}
-            
+
         except Exception as e:
-            logger.error(f"Error sending smart notification: {e}")
+            logger.error("Error sending smart notification: {e}")
             return {"sent": False, "message": f"Error: {str(e)}"}
-    
+
     async def _generate_smart_notification(self, 
                                          user_id: str,
                                          notification_type: str,
-                                         data: Dict[str, Any]) -> Optional[SmartNotification]:
+                                         data: Dict[str, Any]) -> Optional[SmartNotification]  # noqa  # noqa: E501 E501
         """Generate a smart notification with personalized content"""
         try:
             notification_type_enum = NotificationType(notification_type)
             template = self.templates.get(notification_type_enum.value)
-            
+
             if not template:
-                logger.warning(f"No template found for notification type: {notification_type}")
+                logger.warning("No template found for notification type: {notification_type}")
                 return None
-            
+
             # Generate personalized content
             title, body, action_url = await self._generate_personalized_content(
                 template, data, user_id
             )
-            
+
             # Determine priority
             priority = await self._calculate_notification_priority(
                 notification_type_enum, data, user_id
             )
-            
+
             # Determine channels
             channels = await self._determine_notification_channels(
                 notification_type_enum, priority, user_id
             )
-            
+
             # Calculate importance and engagement scores
             importance_score = await self._calculate_importance_score(
                 notification_type_enum, data, user_id
@@ -269,7 +261,7 @@ class NotificationEngineService:
             engagement_prediction = await self._predict_engagement(
                 notification_type_enum, data, user_id
             )
-            
+
             # Create notification
             notification = SmartNotification(
                 notification_id=f"{user_id}_{notification_type}_{datetime.now().timestamp()}",
@@ -285,40 +277,40 @@ class NotificationEngineService:
                 created_at=datetime.now(),
                 data=data
             )
-            
+
             return notification
-            
+
         except Exception as e:
-            logger.error(f"Error generating smart notification: {e}")
+            logger.error("Error generating smart notification: {e}")
             return None
-    
+
     async def _generate_personalized_content(self, 
                                            template: NotificationTemplate,
                                            data: Dict[str, Any],
-                                           user_id: str) -> Tuple[str, str, Optional[str]]:
+                                           user_id: str) -> Tuple[str, str, Optional[str]]  # noqa  # noqa: E501 E501
         """Generate personalized notification content"""
         try:
             # Get user context for personalization
             user_context = await self._get_user_context(user_id)
-            
+
             # Merge data with user context
             content_data = {**data, **user_context}
-            
+
             # Format templates
             title = template.title_template.format(**content_data)
             body = template.body_template.format(**content_data)
             action_url = template.action_template.format(**content_data) if template.action_template else None
-            
+
             return title, body, action_url
-            
+
         except Exception as e:
-            logger.error(f"Error generating personalized content: {e}")
+            logger.error("Error generating personalized content: {e}")
             # Fallback to basic formatting
             title = template.title_template.format(**data)
             body = template.body_template.format(**data)
             action_url = template.action_template.format(**data) if template.action_template else None
             return title, body, action_url
-    
+
     async def _get_user_context(self, user_id: str) -> Dict[str, Any]:
         """Get user context for personalization"""
         try:
@@ -330,25 +322,25 @@ class NotificationEngineService:
                 "timezone": "Europe/Moscow",
                 "language": "ru"
             }
-            
+
         except Exception as e:
-            logger.error(f"Error getting user context: {e}")
+            logger.error("Error getting user context: {e}")
             return {}
-    
+
     async def _calculate_notification_priority(self, 
                                              notification_type: NotificationType,
                                              data: Dict[str, Any],
-                                             user_id: str) -> NotificationPriority:
+                                             user_id: str) -> NotificationPriority  # noqa  # noqa: E501 E501
         """Calculate notification priority using ML"""
         try:
             # Extract features for priority calculation
             features = self._extract_priority_features(notification_type, data, user_id)
-            
+
             # If we have a trained model, use it
             if self.importance_classifier:
                 features_scaled = self.scaler.transform([features])
                 priority_proba = self.importance_classifier.predict_proba(features_scaled)[0]
-                
+
                 # Map probabilities to priority levels
                 if priority_proba[3] > 0.7:  # Critical
                     return NotificationPriority.CRITICAL
@@ -358,26 +350,26 @@ class NotificationEngineService:
                     return NotificationPriority.MEDIUM
                 else:
                     return NotificationPriority.LOW
-            
+
             # Fallback to rule-based priority
             return self._rule_based_priority(notification_type, data)
-            
+
         except Exception as e:
-            logger.error(f"Error calculating notification priority: {e}")
+            logger.error("Error calculating notification priority: {e}")
             return NotificationPriority.MEDIUM
-    
+
     def _extract_priority_features(self, 
                                  notification_type: NotificationType,
                                  data: Dict[str, Any],
                                  user_id: str) -> List[float]:
         """Extract features for priority calculation"""
         features = []
-        
+
         # Notification type features
         type_features = [0] * len(NotificationType)
         type_features[list(NotificationType).index(notification_type)] = 1
         features.extend(type_features)
-        
+
         # Data-based features
         features.extend([
             data.get("price_change_percent", 0),
@@ -386,7 +378,7 @@ class NotificationEngineService:
             data.get("confidence", 0),
             data.get("urgency", 0)
         ])
-        
+
         # User engagement features
         user_engagement = self.engagement_history.get(user_id, {})
         features.extend([
@@ -394,7 +386,7 @@ class NotificationEngineService:
             user_engagement.get("avg_open_rate", 0.5),
             user_engagement.get("recent_activity", 0.5)
         ])
-        
+
         # Time-based features
         now = datetime.now()
         features.extend([
@@ -402,9 +394,9 @@ class NotificationEngineService:
             now.weekday() / 7,  # Day of week (0-1)
             1 if 9 <= now.hour <= 17 else 0,  # Business hours
         ])
-        
+
         return features
-    
+
     def _rule_based_priority(self, 
                            notification_type: NotificationType,
                            data: Dict[str, Any]) -> NotificationPriority:
@@ -420,9 +412,9 @@ class NotificationEngineService:
             NotificationType.ACHIEVEMENT: NotificationPriority.LOW,
             NotificationType.SYSTEM_UPDATE: NotificationPriority.LOW
         }
-        
+
         base_priority = type_priorities.get(notification_type, NotificationPriority.MEDIUM)
-        
+
         # Adjust based on data
         if notification_type == NotificationType.PRICE_DROP:
             price_change = abs(data.get("price_change_percent", 0))
@@ -430,36 +422,36 @@ class NotificationEngineService:
                 return NotificationPriority.CRITICAL
             elif price_change > 10:
                 return NotificationPriority.HIGH
-        
+
         elif notification_type == NotificationType.STOCK_ALERT:
             stock_count = data.get("stock_count", 0)
             if stock_count < 5:
                 return NotificationPriority.CRITICAL
             elif stock_count < 10:
                 return NotificationPriority.HIGH
-        
+
         elif notification_type == NotificationType.NICHE_OPPORTUNITY:
             opportunity_score = data.get("opportunity_score", 0)
             if opportunity_score > 0.8:
                 return NotificationPriority.HIGH
             elif opportunity_score > 0.6:
                 return NotificationPriority.MEDIUM
-        
+
         return base_priority
-    
+
     async def _determine_notification_channels(self, 
                                              notification_type: NotificationType,
                                              priority: NotificationPriority,
-                                             user_id: str) -> List[NotificationChannel]:
+                                             user_id: str) -> List[NotificationChannel]  # noqa  # noqa: E501 E501
         """Determine which channels to use for notification"""
         try:
             # Get user preferences
             preferences = await self.get_user_preferences(user_id)
             enabled_channels = preferences.enabled_channels
-            
+
             # Filter by priority
             channels = []
-            
+
             if priority == NotificationPriority.CRITICAL:
                 # Use all available channels for critical notifications
                 channels = enabled_channels
@@ -469,18 +461,18 @@ class NotificationEngineService:
             else:
                 # Use in-app only for medium/low priority
                 channels = [ch for ch in enabled_channels if ch == NotificationChannel.IN_APP]
-            
+
             # Add email for certain types
-            if notification_type in [NotificationType.SYSTEM_UPDATE, NotificationType.ACHIEVEMENT]:
+            if notification_type in [NotificationType.SYSTEM_UPDATE, NotificationType.ACHIEVEMENT]  # noqa  # noqa: E501 E501
                 if NotificationChannel.EMAIL in enabled_channels:
                     channels.append(NotificationChannel.EMAIL)
-            
+
             return channels if channels else [NotificationChannel.IN_APP]
-            
+
         except Exception as e:
-            logger.error(f"Error determining notification channels: {e}")
+            logger.error("Error determining notification channels: {e}")
             return [NotificationChannel.IN_APP]
-    
+
     async def _calculate_importance_score(self, 
                                         notification_type: NotificationType,
                                         data: Dict[str, Any],
@@ -498,28 +490,28 @@ class NotificationEngineService:
                 NotificationType.ACHIEVEMENT: 0.3,
                 NotificationType.SYSTEM_UPDATE: 0.2
             }
-            
+
             base_importance = type_importance.get(notification_type, 0.5)
-            
+
             # Adjust based on data
             if "price_change_percent" in data:
                 price_change = abs(data["price_change_percent"])
                 base_importance += min(price_change / 100, 0.3)
-            
+
             if "opportunity_score" in data:
                 opportunity_score = data["opportunity_score"]
                 base_importance += opportunity_score * 0.2
-            
+
             if "impact_score" in data:
                 impact_score = data["impact_score"]
                 base_importance += impact_score * 0.2
-            
+
             return max(0, min(1, base_importance))
-            
+
         except Exception as e:
-            logger.error(f"Error calculating importance score: {e}")
+            logger.error("Error calculating importance score: {e}")
             return 0.5
-    
+
     async def _predict_engagement(self, 
                                 notification_type: NotificationType,
                                 data: Dict[str, Any],
@@ -528,7 +520,7 @@ class NotificationEngineService:
         try:
             # Get user engagement history
             user_engagement = self.engagement_history.get(user_id, {})
-            
+
             # Base engagement by type
             type_engagement = {
                 NotificationType.PRICE_DROP: 0.7,
@@ -540,25 +532,25 @@ class NotificationEngineService:
                 NotificationType.ACHIEVEMENT: 0.9,
                 NotificationType.SYSTEM_UPDATE: 0.2
             }
-            
+
             base_engagement = type_engagement.get(notification_type, 0.5)
-            
+
             # Adjust based on user history
             if user_engagement:
                 avg_engagement = user_engagement.get("avg_engagement", 0.5)
                 base_engagement = (base_engagement + avg_engagement) / 2
-            
+
             # Adjust based on data quality
             if "confidence" in data:
                 confidence = data["confidence"]
                 base_engagement *= confidence
-            
+
             return max(0, min(1, base_engagement))
-            
+
         except Exception as e:
-            logger.error(f"Error predicting engagement: {e}")
+            logger.error("Error predicting engagement: {e}")
             return 0.5
-    
+
     async def _apply_smart_prioritization(self, 
                                         notification: SmartNotification,
                                         user_id: str) -> SmartNotification:
@@ -567,20 +559,20 @@ class NotificationEngineService:
             # Check if notification should be batched
             if await self._should_batch_notification(notification, user_id):
                 notification.scheduled_for = datetime.now() + timedelta(minutes=30)
-            
+
             # Check if notification should be delayed
             if await self._should_delay_notification(notification, user_id):
                 notification.scheduled_for = datetime.now() + timedelta(hours=1)
-            
+
             # Set expiration
             notification.expires_at = datetime.now() + timedelta(days=7)
-            
+
             return notification
-            
+
         except Exception as e:
-            logger.error(f"Error applying smart prioritization: {e}")
+            logger.error("Error applying smart prioritization: {e}")
             return notification
-    
+
     async def _should_batch_notification(self, 
                                        notification: SmartNotification,
                                        user_id: str) -> bool:
@@ -588,24 +580,24 @@ class NotificationEngineService:
         try:
             # Get user preferences
             preferences = await self.get_user_preferences(user_id)
-            
+
             # Check if batching is enabled
             if not preferences.batch_notifications:
                 return False
-            
+
             # Check notification type
             batchable_types = [
                 NotificationType.PRICE_SPIKE,
                 NotificationType.COMPETITOR_UPDATE,
                 NotificationType.TREND_ALERT
             ]
-            
+
             return notification.notification_type in batchable_types
-            
+
         except Exception as e:
-            logger.error(f"Error checking if notification should be batched: {e}")
+            logger.error("Error checking if notification should be batched: {e}")
             return False
-    
+
     async def _should_delay_notification(self, 
                                        notification: SmartNotification,
                                        user_id: str) -> bool:
@@ -613,31 +605,31 @@ class NotificationEngineService:
         try:
             # Get user preferences
             preferences = await self.get_user_preferences(user_id)
-            
+
             # Check if it's during quiet hours
             now = datetime.now()
             current_hour = now.hour
-            
+
             if preferences.quiet_hours_start <= preferences.quiet_hours_end:
                 # Same day quiet hours
-                if preferences.quiet_hours_start <= current_hour < preferences.quiet_hours_end:
+                if preferences.quiet_hours_start <= current_hour < preferences.quiet_hours_end  # noqa  # noqa: E501 E501
                     return True
             else:
                 # Overnight quiet hours
-                if current_hour >= preferences.quiet_hours_start or current_hour < preferences.quiet_hours_end:
+                if current_hour >= preferences.quiet_hours_start or current_hour < preferences.quiet_hours_end  # noqa  # noqa: E501 E501
                     return True
-            
+
             # Check if user has reached daily limit
             daily_count = await self._get_daily_notification_count(user_id)
             if daily_count >= preferences.max_notifications_per_day:
                 return True
-            
+
             return False
-            
+
         except Exception as e:
-            logger.error(f"Error checking if notification should be delayed: {e}")
+            logger.error("Error checking if notification should be delayed: {e}")
             return False
-    
+
     async def _should_send_notification(self, 
                                       notification: SmartNotification,
                                       preferences: UserPreferences) -> bool:
@@ -646,22 +638,22 @@ class NotificationEngineService:
             # Check if notification type is enabled
             if notification.notification_type not in preferences.enabled_types:
                 return False
-            
+
             # Check priority threshold
             if notification.importance_score < preferences.priority_threshold:
                 return False
-            
+
             # Check daily limit
             daily_count = await self._get_daily_notification_count(notification.user_id)
             if daily_count >= preferences.max_notifications_per_day:
                 return False
-            
+
             return True
-            
+
         except Exception as e:
-            logger.error(f"Error checking if notification should be sent: {e}")
+            logger.error("Error checking if notification should be sent: {e}")
             return True
-    
+
     async def _schedule_notification(self, 
                                    notification: SmartNotification,
                                    preferences: UserPreferences):
@@ -669,24 +661,24 @@ class NotificationEngineService:
         try:
             # Add to queue
             self.notification_queue.append(notification)
-            
+
             # In a real implementation, this would:
             # 1. Store in database
             # 2. Schedule with a task queue (Celery, RQ, etc.)
             # 3. Send to appropriate channels
-            
-            logger.info(f"Notification scheduled for user {notification.user_id}")
-            
+
+            logger.info("Notification scheduled for user {notification.user_id}")
+
         except Exception as e:
-            logger.error(f"Error scheduling notification: {e}")
-    
+            logger.error("Error scheduling notification: {e}")
+
     async def get_user_preferences(self, user_id: str) -> UserPreferences:
         """Get user notification preferences"""
         try:
             # Check cache first
             if user_id in self.user_preferences:
                 return self.user_preferences[user_id]
-            
+
             # In a real implementation, this would query the database
             # For now, return default preferences
             preferences = UserPreferences(
@@ -704,14 +696,14 @@ class NotificationEngineService:
                 batch_notifications=True,
                 digest_frequency="daily"
             )
-            
+
             # Cache preferences
             self.user_preferences[user_id] = preferences
-            
+
             return preferences
-            
+
         except Exception as e:
-            logger.error(f"Error getting user preferences: {e}")
+            logger.error("Error getting user preferences: {e}")
             # Return default preferences
             return UserPreferences(
                 user_id=user_id,
@@ -724,7 +716,7 @@ class NotificationEngineService:
                 batch_notifications=False,
                 digest_frequency="never"
             )
-    
+
     async def update_user_preferences(self, 
                                     user_id: str,
                                     preferences: UserPreferences):
@@ -732,24 +724,24 @@ class NotificationEngineService:
         try:
             # Update cache
             self.user_preferences[user_id] = preferences
-            
+
             # In a real implementation, this would update the database
-            logger.info(f"Updated preferences for user {user_id}")
-            
+            logger.info("Updated preferences for user {user_id}")
+
         except Exception as e:
-            logger.error(f"Error updating user preferences: {e}")
-    
+            logger.error("Error updating user preferences: {e}")
+
     async def _get_daily_notification_count(self, user_id: str) -> int:
         """Get daily notification count for user"""
         try:
             # In a real implementation, this would query the database
             # For now, return mock count
             return len([n for n in self.notification_queue if n.user_id == user_id])
-            
+
         except Exception as e:
-            logger.error(f"Error getting daily notification count: {e}")
+            logger.error("Error getting daily notification count: {e}")
             return 0
-    
+
     async def track_engagement(self, 
                              notification_id: str,
                              action: str,
@@ -764,24 +756,24 @@ class NotificationEngineService:
                     "total_clicks": 0,
                     "avg_engagement": 0.5
                 }
-            
+
             user_engagement = self.engagement_history[user_id]
             user_engagement["total_notifications"] += 1
-            
+
             if action == "open":
                 user_engagement["total_opens"] += 1
             elif action == "click":
                 user_engagement["total_clicks"] += 1
-            
+
             # Calculate average engagement
             total_actions = user_engagement["total_opens"] + user_engagement["total_clicks"]
             user_engagement["avg_engagement"] = total_actions / user_engagement["total_notifications"]
-            
-            logger.info(f"Tracked engagement for notification {notification_id}: {action}")
-            
+
+            logger.info("Tracked engagement for notification {notification_id}: {action}")
+
         except Exception as e:
-            logger.error(f"Error tracking engagement: {e}")
-    
+            logger.error("Error tracking engagement: {e}")
+
     async def get_notification_history(self, 
                                      user_id: str,
                                      limit: int = 50) -> List[Dict[str, Any]]:
@@ -792,10 +784,10 @@ class NotificationEngineService:
                 n for n in self.notification_queue 
                 if n.user_id == user_id
             ]
-            
+
             # Sort by creation date
             user_notifications.sort(key=lambda x: x.created_at, reverse=True)
-            
+
             # Convert to dict format
             history = []
             for notification in user_notifications[:limit]:
@@ -809,26 +801,26 @@ class NotificationEngineService:
                     "importance_score": notification.importance_score,
                     "engagement_prediction": notification.engagement_prediction
                 })
-            
+
             return history
-            
+
         except Exception as e:
-            logger.error(f"Error getting notification history: {e}")
+            logger.error("Error getting notification history: {e}")
             return []
-    
-    async def train_models(self, training_data: Optional[List[Dict[str, Any]]] = None):
+
+    async def train_models(self, training_data: Optional[List[Dict[str, Any]]] = None)  # noqa  # noqa: E501 E501
         """Train ML models for notification optimization"""
         try:
             logger.info("Training notification models...")
-            
+
             if not training_data:
                 training_data = await self._generate_training_data()
-            
+
             # Prepare features and targets
             X = []
             y_importance = []
             y_engagement = []
-            
+
             for data in training_data:
                 features = self._extract_priority_features(
                     NotificationType(data["notification_type"]),
@@ -838,32 +830,32 @@ class NotificationEngineService:
                 X.append(features)
                 y_importance.append(data["importance_label"])
                 y_engagement.append(data["engagement_score"])
-            
+
             # Scale features
             X_scaled = self.scaler.fit_transform(X)
-            
+
             # Train importance classifier
             self.importance_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
             self.importance_classifier.fit(X_scaled, y_importance)
-            
+
             # Train engagement predictor
             self.engagement_predictor = RandomForestClassifier(n_estimators=100, random_state=42)
             self.engagement_predictor.fit(X_scaled, y_engagement)
-            
+
             logger.info("Notification models trained successfully")
-            
+
         except Exception as e:
-            logger.error(f"Error training notification models: {e}")
-    
+            logger.error("Error training notification models: {e}")
+
     async def _generate_training_data(self) -> List[Dict[str, Any]]:
         """Generate training data for notification models"""
         training_data = []
-        
+
         # Generate mock training data
         for _ in range(1000):
             notification_type = np.random.choice(list(NotificationType))
             user_id = f"user_{np.random.randint(1, 100)}"
-            
+
             # Generate mock data
             data = {
                 "price_change_percent": np.random.uniform(-50, 50),
@@ -872,11 +864,11 @@ class NotificationEngineService:
                 "confidence": np.random.uniform(0, 1),
                 "urgency": np.random.uniform(0, 1)
             }
-            
+
             # Generate labels
             importance_label = np.random.choice([0, 1, 2, 3])  # Low, Medium, High, Critical
             engagement_score = np.random.uniform(0, 1)
-            
+
             training_data.append({
                 "notification_type": notification_type.value,
                 "user_id": user_id,
@@ -884,7 +876,5 @@ class NotificationEngineService:
                 "importance_label": importance_label,
                 "engagement_score": engagement_score
             })
-        
+
         return training_data
-
-

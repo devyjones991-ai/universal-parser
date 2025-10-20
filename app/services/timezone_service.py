@@ -1,14 +1,9 @@
 """Сервис для работы с часовыми поясами"""
 
 import pytz
-from datetime import datetime, timezone
-from typing import Dict, Any, Optional, List, Tuple
 from dataclasses import dataclass
-import json
-import os
 
 from app.core.i18n import i18n_manager
-
 
 @dataclass
 class TimezoneInfo:
@@ -20,10 +15,9 @@ class TimezoneInfo:
     city: str
     is_dst: bool = False
 
-
 class TimezoneService:
     """Сервис для работы с часовыми поясами"""
-    
+
     def __init__(self):
         self.default_timezone = "UTC"
         self.popular_timezones = [
@@ -114,7 +108,7 @@ class TimezoneService:
             "America/Florianopolis", # BRT
             "America/Porto_Alegre"   # BRT
         ]
-        
+
         # Маппинг стран к часовым поясам
         self.country_timezone_map = {
             "US": "America/New_York",
@@ -158,7 +152,7 @@ class TimezoneService:
             "PY": "America/Asuncion",
             "UY": "America/Montevideo"
         }
-        
+
         # Маппинг локалей к часовым поясам
         self.locale_timezone_map = {
             "en": "America/New_York",
@@ -223,26 +217,26 @@ class TimezoneService:
             "ar-EG": "Africa/Cairo",
             "he-IL": "Asia/Jerusalem"
         }
-    
+
     def get_timezone_info(self, timezone_name: str) -> Optional[TimezoneInfo]:
         """Получить информацию о часовом поясе"""
         try:
             tz = pytz.timezone(timezone_name)
             now = datetime.now(tz)
-            
+
             # Получаем смещение UTC
             utc_offset = now.strftime("%z")
             if utc_offset:
                 utc_offset = f"UTC{utc_offset[:3]}:{utc_offset[3:]}"
             else:
                 utc_offset = "UTC+00:00"
-            
+
             # Получаем название города
             city = timezone_name.split("/")[-1].replace("_", " ")
-            
+
             # Определяем страну по часовому поясу
             country = self._get_country_by_timezone(timezone_name)
-            
+
             return TimezoneInfo(
                 name=timezone_name,
                 display_name=self._get_display_name(timezone_name),
@@ -253,7 +247,7 @@ class TimezoneService:
             )
         except Exception:
             return None
-    
+
     def _get_country_by_timezone(self, timezone_name: str) -> str:
         """Получить страну по часовому поясу"""
         timezone_country_map = {
@@ -293,9 +287,9 @@ class TimezoneService:
             "Africa/Cairo": "Egypt",
             "Africa/Johannesburg": "South Africa"
         }
-        
+
         return timezone_country_map.get(timezone_name, "Unknown")
-    
+
     def _get_display_name(self, timezone_name: str) -> str:
         """Получить отображаемое название часового пояса"""
         display_names = {
@@ -336,9 +330,9 @@ class TimezoneService:
             "Africa/Cairo": "Eastern European Time",
             "Africa/Johannesburg": "South Africa Standard Time"
         }
-        
+
         return display_names.get(timezone_name, timezone_name)
-    
+
     def get_popular_timezones(self) -> List[TimezoneInfo]:
         """Получить список популярных часовых поясов"""
         timezones = []
@@ -347,32 +341,32 @@ class TimezoneService:
             if tz_info:
                 timezones.append(tz_info)
         return timezones
-    
+
     def get_timezone_by_country(self, country_code: str) -> Optional[str]:
         """Получить часовой пояс по коду страны"""
         return self.country_timezone_map.get(country_code.upper())
-    
+
     def get_timezone_by_locale(self, locale: str) -> Optional[str]:
         """Получить часовой пояс по локали"""
         return self.locale_timezone_map.get(locale)
-    
-    def convert_datetime(self, dt: datetime, from_tz: str, to_tz: str) -> datetime:
+
+    def convert_datetime(self, dt: datetime, from_tz: str, to_tz: str) -> datetime  # noqa  # noqa: E501 E501
         """Конвертировать дату и время между часовыми поясами"""
         try:
             # Создаем timezone объекты
             from_timezone = pytz.timezone(from_tz)
             to_timezone = pytz.timezone(to_tz)
-            
+
             # Если дата наивная (без timezone), считаем её в исходном часовом поясе
             if dt.tzinfo is None:
                 dt = from_timezone.localize(dt)
-            
+
             # Конвертируем в целевой часовой пояс
             return dt.astimezone(to_timezone)
         except Exception as e:
             print(f"Error converting datetime from {from_tz} to {to_tz}: {e}")
             return dt
-    
+
     def get_current_time(self, timezone_name: str) -> datetime:
         """Получить текущее время в указанном часовом поясе"""
         try:
@@ -380,7 +374,7 @@ class TimezoneService:
             return datetime.now(tz)
         except Exception:
             return datetime.now()
-    
+
     def get_utc_offset(self, timezone_name: str) -> str:
         """Получить смещение UTC для часового пояса"""
         try:
@@ -392,7 +386,7 @@ class TimezoneService:
             return "UTC+00:00"
         except Exception:
             return "UTC+00:00"
-    
+
     def is_dst_active(self, timezone_name: str) -> bool:
         """Проверить, действует ли летнее время"""
         try:
@@ -401,7 +395,7 @@ class TimezoneService:
             return now.dst() != timedelta(0)
         except Exception:
             return False
-    
+
     def get_timezone_abbreviation(self, timezone_name: str) -> str:
         """Получить аббревиатуру часового пояса"""
         try:
@@ -410,7 +404,7 @@ class TimezoneService:
             return now.strftime("%Z")
         except Exception:
             return "UTC"
-    
+
     def get_timezone_emoji(self, timezone_name: str) -> str:
         """Получить эмодзи для часового пояса"""
         timezone_emojis = {
@@ -451,9 +445,9 @@ class TimezoneService:
             "Africa/Cairo": "🇪🇬",
             "Africa/Johannesburg": "🇿🇦"
         }
-        
+
         return timezone_emojis.get(timezone_name, "🌍")
-    
+
     def get_timezone_groups(self) -> Dict[str, List[TimezoneInfo]]:
         """Получить часовые пояса, сгруппированные по регионам"""
         groups = {
@@ -464,7 +458,7 @@ class TimezoneService:
             "Oceania": [],
             "UTC": []
         }
-        
+
         for tz_name in self.popular_timezones:
             tz_info = self.get_timezone_info(tz_name)
             if tz_info:
@@ -478,13 +472,13 @@ class TimezoneService:
                     groups["Asia"].append(tz_info)
                 elif tz_name.startswith("Africa/"):
                     groups["Africa"].append(tz_info)
-                elif tz_name.startswith("Australia/") or tz_name.startswith("Pacific/"):
+                elif tz_name.startswith("Australia/") or tz_name.startswith("Pacific/")  # noqa  # noqa: E501 E501
                     groups["Oceania"].append(tz_info)
-        
+
         return groups
-    
+
     def format_datetime_for_timezone(self, dt: datetime, timezone_name: str, 
-                                   format_string: str = "%Y-%m-%d %H:%M:%S") -> str:
+                                   format_string: str = "%Y-%m-%d %H:%M:%S") -> str  # noqa  # noqa: E501 E501
         """Форматировать дату и время для часового пояса"""
         try:
             tz = pytz.timezone(timezone_name)
@@ -495,20 +489,20 @@ class TimezoneService:
             return dt.strftime(format_string)
         except Exception:
             return dt.strftime(format_string)
-    
+
     def get_timezone_difference(self, tz1: str, tz2: str) -> str:
         """Получить разность между двумя часовыми поясами"""
         try:
             tz1_obj = pytz.timezone(tz1)
             tz2_obj = pytz.timezone(tz2)
-            
+
             now = datetime.now()
             dt1 = tz1_obj.localize(now)
             dt2 = tz2_obj.localize(now)
-            
+
             diff = dt2 - dt1
             hours = diff.total_seconds() / 3600
-            
+
             if hours > 0:
                 return f"+{hours:.1f} hours"
             elif hours < 0:
@@ -517,21 +511,21 @@ class TimezoneService:
                 return "Same time"
         except Exception:
             return "Unknown"
-    
-    def get_working_hours(self, timezone_name: str, start_hour: int = 9, end_hour: int = 17) -> Dict[str, Any]:
+
+    def get_working_hours(self, timezone_name: str, start_hour: int = 9, end_hour: int = 17) -> Dict[str, Any]  # noqa  # noqa: E501 E501
         """Получить рабочие часы для часового пояса"""
         try:
             tz = pytz.timezone(timezone_name)
             now = datetime.now(tz)
-            
+
             # Рабочие часы сегодня
             work_start = now.replace(hour=start_hour, minute=0, second=0, microsecond=0)
             work_end = now.replace(hour=end_hour, minute=0, second=0, microsecond=0)
-            
+
             # Проверяем, рабочий ли сейчас день
             is_workday = now.weekday() < 5  # Понедельник = 0, Пятница = 4
             is_working_hours = work_start <= now <= work_end
-            
+
             return {
                 "timezone": timezone_name,
                 "current_time": now,
@@ -556,8 +550,5 @@ class TimezoneService:
                 "time_until_work_end": timedelta(0)
             }
 
-
 # Глобальный экземпляр сервиса часовых поясов
 timezone_service = TimezoneService()
-
-

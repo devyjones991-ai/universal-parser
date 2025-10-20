@@ -6,11 +6,11 @@ from graphene_sqlalchemy import SQLAlchemyObjectType, SQLAlchemyConnectionField
 from typing import Optional, Dict, Any
 from datetime import datetime
 
-from app.models.item import Item
+from app.models.item import TrackedItem
 from app.models.user import User
-from app.models.price_history import PriceHistory
+from app.models.item import PriceHistory
 from app.models.social import SocialPost, UserProfile
-from app.core.database import get_async_session
+from app.core.database import get_db
 
 
 class ItemType(SQLAlchemyObjectType):

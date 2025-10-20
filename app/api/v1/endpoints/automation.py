@@ -15,7 +15,6 @@ from app.services.demand_forecasting import DemandForecastingService
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-
 # Request/Response Models
 class NicheDiscoveryRequest(BaseModel):
     max_niches: int = Field(default=10, ge=1, le=50)
@@ -23,18 +22,15 @@ class NicheDiscoveryRequest(BaseModel):
     include_trends: bool = Field(default=True)
     categories: Optional[List[str]] = Field(default=None)
 
-
 class NicheDiscoveryResponse(BaseModel):
     niches: List[Dict[str, Any]]
     total_found: int
     analysis_date: str
 
-
 class TrendDetectionRequest(BaseModel):
     marketplaces: Optional[List[str]] = Field(default=None)
     categories: Optional[List[str]] = Field(default=None)
     time_window_hours: int = Field(default=24, ge=1, le=168)  # Max 1 week
-
 
 class TrendDetectionResponse(BaseModel):
     trends: List[Dict[str, Any]]
@@ -43,11 +39,9 @@ class TrendDetectionResponse(BaseModel):
     critical_count: int
     analysis_period: Dict[str, str]
 
-
 class AutomationStatusRequest(BaseModel):
     automation_type: str = Field(..., regex="^(niche_discovery|trend_detection|dynamic_pricing|notifications|forecasting)$")
     enabled: bool
-
 
 class AutomationStatusResponse(BaseModel):
     automation_type: str
@@ -56,7 +50,6 @@ class AutomationStatusResponse(BaseModel):
     next_run: Optional[str] = None
     status: str
 
-
 class AutomationConfigRequest(BaseModel):
     niche_discovery: Dict[str, Any] = Field(default={})
     trend_detection: Dict[str, Any] = Field(default={})
@@ -64,32 +57,25 @@ class AutomationConfigRequest(BaseModel):
     notifications: Dict[str, Any] = Field(default={})
     forecasting: Dict[str, Any] = Field(default={})
 
-
 class AutomationConfigResponse(BaseModel):
     config: Dict[str, Any]
     updated_at: str
-
 
 # Dependency injection
 def get_niche_discovery_service() -> AINicheDiscoveryService:
     return AINicheDiscoveryService()
 
-
 def get_trend_detector_service() -> TrendDetectorService:
     return TrendDetectorService()
-
 
 def get_dynamic_pricing_service() -> DynamicPricingService:
     return DynamicPricingService()
 
-
 def get_notification_engine_service() -> NotificationEngineService:
     return NotificationEngineService()
 
-
 def get_demand_forecasting_service() -> DemandForecastingService:
     return DemandForecastingService()
-
 
 # Niche Discovery Endpoints
 @router.post("/niche-discovery/discover", response_model=NicheDiscoveryResponse)
@@ -102,15 +88,15 @@ async def discover_niches(
     Discover promising niches using AI analysis
     """
     try:
-        logger.info(f"Starting niche discovery with {request.max_niches} max niches")
-        
+        logger.info("Starting niche discovery with {request.max_niches} max niches")
+
         # Discover niches
         niches = await niche_service.discover_niches(
             max_niches=request.max_niches,
             min_opportunity_score=request.min_opportunity_score,
             include_trends=request.include_trends
         )
-        
+
         # Convert to response format
         niche_data = []
         for niche in niches:
@@ -130,27 +116,26 @@ async def discover_niches(
                 "risks": niche.risks,
                 "market_data": niche.market_data
             })
-        
+
         # Schedule background task to cache results
         background_tasks.add_task(
             cache_niche_discovery_results,
             niche_data,
             request
         )
-        
+
         return NicheDiscoveryResponse(
             niches=niche_data,
             total_found=len(niche_data),
             analysis_date=niche.detected_at.isoformat() if niches else None
         )
-        
+
     except Exception as e:
-        logger.error(f"Error in niche discovery: {e}")
+        logger.error("Error in niche discovery: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to discover niches: {str(e)}"
         )
-
 
 @router.get("/niche-discovery/insights/{niche}")
 async def get_niche_insights(
@@ -162,24 +147,23 @@ async def get_niche_insights(
     """
     try:
         insights = await niche_service.get_niche_insights(niche)
-        
+
         if not insights:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"No insights found for niche: {niche}"
             )
-        
+
         return insights
-        
+
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting niche insights for {niche}: {e}")
+        logger.error("Error getting niche insights for {niche}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get niche insights: {str(e)}"
         )
-
 
 @router.post("/niche-discovery/train-models")
 async def train_niche_models(
@@ -192,16 +176,15 @@ async def train_niche_models(
     try:
         # Schedule training in background
         background_tasks.add_task(niche_service.train_models)
-        
+
         return {"message": "Model training started in background"}
-        
+
     except Exception as e:
-        logger.error(f"Error starting model training: {e}")
+        logger.error("Error starting model training: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to start model training: {str(e)}"
         )
-
 
 # Trend Detection Endpoints
 @router.post("/trend-detection/detect", response_model=TrendDetectionResponse)
@@ -214,20 +197,20 @@ async def detect_trends(
     Detect trends across marketplaces and categories
     """
     try:
-        logger.info(f"Starting trend detection for {request.time_window_hours} hours")
-        
+        logger.info("Starting trend detection for {request.time_window_hours} hours")
+
         # Detect trends
         trends = await trend_service.detect_trends(
             marketplaces=request.marketplaces,
             categories=request.categories,
             time_window_hours=request.time_window_hours
         )
-        
+
         # Convert to response format
         trend_data = []
         high_impact_count = 0
         critical_count = 0
-        
+
         for trend in trends:
             trend_data.append({
                 "trend_type": trend.trend_type.value,
@@ -242,19 +225,19 @@ async def detect_trends(
                 "recommendations": trend.recommendations,
                 "data_points": trend.data_points
             })
-            
+
             if trend.impact_score > 0.7:
                 high_impact_count += 1
             if trend.severity.value == "critical":
                 critical_count += 1
-        
+
         # Schedule background task to cache results
         background_tasks.add_task(
             cache_trend_detection_results,
             trend_data,
             request
         )
-        
+
         return TrendDetectionResponse(
             trends=trend_data,
             total_trends=len(trend_data),
@@ -265,14 +248,13 @@ async def detect_trends(
                 "end": datetime.now().isoformat()
             }
         )
-        
+
     except Exception as e:
-        logger.error(f"Error in trend detection: {e}")
+        logger.error("Error in trend detection: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to detect trends: {str(e)}"
         )
-
 
 @router.get("/trend-detection/summary")
 async def get_trend_summary(
@@ -290,16 +272,15 @@ async def get_trend_summary(
             categories=categories,
             hours=hours
         )
-        
+
         return summary
-        
+
     except Exception as e:
-        logger.error(f"Error getting trend summary: {e}")
+        logger.error("Error getting trend summary: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get trend summary: {str(e)}"
         )
-
 
 @router.post("/trend-detection/train-anomaly-detector")
 async def train_anomaly_detector(
@@ -312,16 +293,15 @@ async def train_anomaly_detector(
     try:
         # Schedule training in background
         background_tasks.add_task(trend_service.train_anomaly_detector)
-        
+
         return {"message": "Anomaly detector training started in background"}
-        
+
     except Exception as e:
-        logger.error(f"Error starting anomaly detector training: {e}")
+        logger.error("Error starting anomaly detector training: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to start anomaly detector training: {str(e)}"
         )
-
 
 # Dynamic Pricing Endpoints
 @router.post("/dynamic-pricing/analyze")
@@ -334,20 +314,19 @@ async def analyze_pricing_opportunities(
     """
     try:
         opportunities = await pricing_service.analyze_pricing_opportunities(items)
-        
+
         return {
             "items": items,
             "opportunities": opportunities,
             "analysis_date": datetime.now().isoformat()
         }
-        
+
     except Exception as e:
-        logger.error(f"Error analyzing pricing opportunities: {e}")
+        logger.error("Error analyzing pricing opportunities: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to analyze pricing opportunities: {str(e)}"
         )
-
 
 @router.post("/dynamic-pricing/optimize")
 async def optimize_pricing(
@@ -360,21 +339,20 @@ async def optimize_pricing(
     """
     try:
         optimized_prices = await pricing_service.optimize_pricing(items, strategy)
-        
+
         return {
             "items": items,
             "optimized_prices": optimized_prices,
             "strategy": strategy,
             "optimization_date": datetime.now().isoformat()
         }
-        
+
     except Exception as e:
-        logger.error(f"Error optimizing pricing: {e}")
+        logger.error("Error optimizing pricing: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to optimize pricing: {str(e)}"
         )
-
 
 # Notification Engine Endpoints
 @router.post("/notifications/send-smart")
@@ -391,7 +369,7 @@ async def send_smart_notifications(
             user_id=user_id,
             notification_type=notification_type
         )
-        
+
         return {
             "user_id": user_id,
             "notification_type": notification_type,
@@ -399,14 +377,13 @@ async def send_smart_notifications(
             "message": result["message"],
             "sent_at": datetime.now().isoformat()
         }
-        
+
     except Exception as e:
-        logger.error(f"Error sending smart notifications: {e}")
+        logger.error("Error sending smart notifications: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to send smart notifications: {str(e)}"
         )
-
 
 @router.get("/notifications/preferences/{user_id}")
 async def get_notification_preferences(
@@ -418,19 +395,18 @@ async def get_notification_preferences(
     """
     try:
         preferences = await notification_service.get_user_preferences(user_id)
-        
+
         return {
             "user_id": user_id,
             "preferences": preferences
         }
-        
+
     except Exception as e:
-        logger.error(f"Error getting notification preferences: {e}")
+        logger.error("Error getting notification preferences: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get notification preferences: {str(e)}"
         )
-
 
 # Demand Forecasting Endpoints
 @router.post("/forecasting/predict-demand")
@@ -444,21 +420,20 @@ async def predict_demand(
     """
     try:
         predictions = await forecasting_service.predict_demand(items, days_ahead)
-        
+
         return {
             "items": items,
             "predictions": predictions,
             "forecast_period": f"{days_ahead} days",
             "forecast_date": datetime.now().isoformat()
         }
-        
+
     except Exception as e:
-        logger.error(f"Error predicting demand: {e}")
+        logger.error("Error predicting demand: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to predict demand: {str(e)}"
         )
-
 
 @router.get("/forecasting/seasonal-patterns")
 async def get_seasonal_patterns(
@@ -470,20 +445,19 @@ async def get_seasonal_patterns(
     """
     try:
         patterns = await forecasting_service.get_seasonal_patterns(category)
-        
+
         return {
             "category": category,
             "patterns": patterns,
             "analysis_date": datetime.now().isoformat()
         }
-        
+
     except Exception as e:
-        logger.error(f"Error getting seasonal patterns: {e}")
+        logger.error("Error getting seasonal patterns: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get seasonal patterns: {str(e)}"
         )
-
 
 # Automation Status and Configuration
 @router.get("/status")
@@ -525,16 +499,15 @@ async def get_automation_status():
                 "status": "active"
             }
         }
-        
+
         return status_data
-        
+
     except Exception as e:
-        logger.error(f"Error getting automation status: {e}")
+        logger.error("Error getting automation status: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get automation status: {str(e)}"
         )
-
 
 @router.post("/status/{automation_type}")
 async def update_automation_status(
@@ -546,8 +519,8 @@ async def update_automation_status(
     """
     try:
         # This would typically update a database or configuration service
-        logger.info(f"Updating {automation_type} status to {request.enabled}")
-        
+        logger.info("Updating {automation_type} status to {request.enabled}")
+
         return AutomationStatusResponse(
             automation_type=automation_type,
             enabled=request.enabled,
@@ -555,14 +528,13 @@ async def update_automation_status(
             next_run=datetime.now().isoformat(),
             status="active" if request.enabled else "disabled"
         )
-        
+
     except Exception as e:
-        logger.error(f"Error updating automation status: {e}")
+        logger.error("Error updating automation status: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update automation status: {str(e)}"
         )
-
 
 @router.get("/config")
 async def get_automation_config():
@@ -603,19 +575,18 @@ async def get_automation_config():
                 "confidence_threshold": 0.8
             }
         }
-        
+
         return AutomationConfigResponse(
             config=config,
             updated_at=datetime.now().isoformat()
         )
-        
+
     except Exception as e:
-        logger.error(f"Error getting automation config: {e}")
+        logger.error("Error getting automation config: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get automation config: {str(e)}"
         )
-
 
 @router.post("/config")
 async def update_automation_config(
@@ -627,40 +598,34 @@ async def update_automation_config(
     try:
         # This would typically update a configuration service
         logger.info("Updating automation configuration")
-        
+
         return AutomationConfigResponse(
             config=request.dict(),
             updated_at=datetime.now().isoformat()
         )
-        
+
     except Exception as e:
-        logger.error(f"Error updating automation config: {e}")
+        logger.error("Error updating automation config: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update automation config: {str(e)}"
         )
 
-
 # Background tasks
-async def cache_niche_discovery_results(niche_data: List[Dict[str, Any]], request: NicheDiscoveryRequest):
+async def cache_niche_discovery_results(niche_data: List[Dict[str, Any]], request: NicheDiscoveryRequest)  # noqa  # noqa: E501 E501
     """Cache niche discovery results"""
     try:
         # This would typically cache results in Redis or database
-        logger.info(f"Caching {len(niche_data)} niche discovery results")
+        logger.info("Caching {len(niche_data)} niche discovery results")
     except Exception as e:
-        logger.error(f"Error caching niche discovery results: {e}")
+        logger.error("Error caching niche discovery results: {e}")
 
-
-async def cache_trend_detection_results(trend_data: List[Dict[str, Any]], request: TrendDetectionRequest):
+async def cache_trend_detection_results(trend_data: List[Dict[str, Any]], request: TrendDetectionRequest)  # noqa  # noqa: E501 E501
     """Cache trend detection results"""
     try:
         # This would typically cache results in Redis or database
-        logger.info(f"Caching {len(trend_data)} trend detection results")
+        logger.info("Caching {len(trend_data)} trend detection results")
     except Exception as e:
-        logger.error(f"Error caching trend detection results: {e}")
-
+        logger.error("Error caching trend detection results: {e}")
 
 # Import datetime for the endpoints
-from datetime import datetime, timedelta
-
-

@@ -1,6 +1,6 @@
 """API эндпоинты для интернационализации и локализации"""
 
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any, Optional
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
@@ -13,13 +13,11 @@ from app.services.timezone_service import timezone_service
 
 router = APIRouter()
 
-
 class TranslationRequest(BaseModel):
     """Запрос на перевод"""
     key: str
     locale: str
     parameters: Optional[Dict[str, Any]] = None
-
 
 class CurrencyConversionRequest(BaseModel):
     """Запрос на конвертацию валюты"""
@@ -27,13 +25,11 @@ class CurrencyConversionRequest(BaseModel):
     from_currency: str
     to_currency: str
 
-
 class TimezoneConversionRequest(BaseModel):
     """Запрос на конвертацию часового пояса"""
     datetime: datetime
     from_timezone: str
     to_timezone: str
-
 
 @router.get("/locales")
 async def get_supported_locales():
@@ -44,7 +40,6 @@ async def get_supported_locales():
         "total": len(locales),
         "default": i18n_manager.default_locale
     }
-
 
 @router.get("/locales/{locale_code}")
 async def get_locale_info(locale_code: str):
@@ -57,7 +52,6 @@ async def get_locale_info(locale_code: str):
         )
     return locale_info
 
-
 @router.get("/translations")
 async def get_translations(
     locale: str = Query(..., description="Код локали"),
@@ -69,18 +63,17 @@ async def get_translations(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Unsupported locale"
         )
-    
+
     translations = i18n_manager.translations.get(locale, {})
-    
+
     if namespace:
         translations = translations.get(namespace, {})
-    
+
     return {
         "locale": locale,
         "namespace": namespace,
         "translations": translations
     }
-
 
 @router.post("/translations")
 async def add_translation(
@@ -93,20 +86,19 @@ async def add_translation(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Unsupported locale"
         )
-    
+
     # В реальном приложении здесь была бы валидация и сохранение в БД
     i18n_manager.add_translation(
         request.key,
         request.parameters.get("value", ""),
         request.locale
     )
-    
+
     return {
         "message": "Translation added successfully",
         "key": request.key,
         "locale": request.locale
     }
-
 
 @router.get("/text/{key}")
 async def get_translated_text(
@@ -120,16 +112,15 @@ async def get_translated_text(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Unsupported locale"
         )
-    
+
     text = get_text(key, locale, **kwargs)
-    
+
     return {
         "key": key,
         "locale": locale,
         "text": text,
         "is_rtl": is_rtl(locale)
     }
-
 
 @router.get("/currencies")
 async def get_supported_currencies():
@@ -149,7 +140,6 @@ async def get_supported_currencies():
         "total": len(currencies)
     }
 
-
 @router.get("/currencies/{currency_code}")
 async def get_currency_info(currency_code: str):
     """Получить информацию о валюте"""
@@ -159,7 +149,7 @@ async def get_currency_info(currency_code: str):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Currency not found"
         )
-    
+
     return {
         "code": currency_info.code,
         "name": currency_info.name,
@@ -169,7 +159,6 @@ async def get_currency_info(currency_code: str):
         "emoji": currency_service.get_currency_emoji(currency_code)
     }
 
-
 @router.post("/currencies/convert")
 async def convert_currency(request: CurrencyConversionRequest):
     """Конвертировать валюту"""
@@ -178,28 +167,28 @@ async def convert_currency(request: CurrencyConversionRequest):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Unsupported currency: {request.from_currency}"
         )
-    
+
     if not currency_service.is_currency_supported(request.to_currency):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Unsupported currency: {request.to_currency}"
         )
-    
+
     from decimal import Decimal
     amount = Decimal(str(request.amount))
-    
+
     converted_amount = await currency_service.convert_currency(
         amount,
         request.from_currency,
         request.to_currency
     )
-    
+
     if converted_amount is None:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Currency conversion failed"
         )
-    
+
     return {
         "from_currency": request.from_currency,
         "to_currency": request.to_currency,
@@ -207,7 +196,6 @@ async def convert_currency(request: CurrencyConversionRequest):
         "converted_amount": float(converted_amount),
         "rate": float(converted_amount / amount) if amount != 0 else 0
     }
-
 
 @router.get("/currencies/rates")
 async def get_exchange_rates(
@@ -220,17 +208,16 @@ async def get_exchange_rates(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Unsupported currency: {from_currency}"
         )
-    
+
     to_currency_list = [curr.strip() for curr in to_currencies.split(",")]
-    
+
     rates = await currency_service.get_multiple_rates(from_currency, to_currency_list)
-    
+
     return {
         "base_currency": from_currency,
         "rates": rates,
         "timestamp": datetime.utcnow().isoformat()
     }
-
 
 @router.get("/timezones")
 async def get_supported_timezones():
@@ -252,7 +239,6 @@ async def get_supported_timezones():
         "total": len(timezones)
     }
 
-
 @router.get("/timezones/{timezone_name}")
 async def get_timezone_info(timezone_name: str):
     """Получить информацию о часовом поясе"""
@@ -262,7 +248,7 @@ async def get_timezone_info(timezone_name: str):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Timezone not found"
         )
-    
+
     return {
         "name": timezone_info.name,
         "display_name": timezone_info.display_name,
@@ -274,7 +260,6 @@ async def get_timezone_info(timezone_name: str):
         "abbreviation": timezone_service.get_timezone_abbreviation(timezone_name)
     }
 
-
 @router.post("/timezones/convert")
 async def convert_timezone(request: TimezoneConversionRequest):
     """Конвертировать дату и время между часовыми поясами"""
@@ -284,7 +269,7 @@ async def convert_timezone(request: TimezoneConversionRequest):
             request.from_timezone,
             request.to_timezone
         )
-        
+
         return {
             "original_datetime": request.datetime.isoformat(),
             "from_timezone": request.from_timezone,
@@ -303,13 +288,12 @@ async def convert_timezone(request: TimezoneConversionRequest):
             detail=f"Timezone conversion failed: {str(e)}"
         )
 
-
 @router.get("/timezones/current/{timezone_name}")
 async def get_current_time(timezone_name: str):
     """Получить текущее время в часовом поясе"""
     try:
         current_time = timezone_service.get_current_time(timezone_name)
-        
+
         return {
             "timezone": timezone_name,
             "current_time": current_time.isoformat(),
@@ -323,12 +307,11 @@ async def get_current_time(timezone_name: str):
             detail=f"Failed to get current time: {str(e)}"
         )
 
-
 @router.get("/timezones/groups")
 async def get_timezone_groups():
     """Получить часовые пояса, сгруппированные по регионам"""
     groups = timezone_service.get_timezone_groups()
-    
+
     return {
         "groups": {
             region: [
@@ -347,7 +330,6 @@ async def get_timezone_groups():
         }
     }
 
-
 @router.get("/timezones/working-hours/{timezone_name}")
 async def get_working_hours(
     timezone_name: str,
@@ -357,7 +339,7 @@ async def get_working_hours(
     """Получить рабочие часы для часового пояса"""
     try:
         working_hours = timezone_service.get_working_hours(timezone_name, start_hour, end_hour)
-        
+
         return {
             "timezone": timezone_name,
             "current_time": working_hours["current_time"].isoformat(),
@@ -375,7 +357,6 @@ async def get_working_hours(
             detail=f"Failed to get working hours: {str(e)}"
         )
 
-
 @router.get("/detect-language")
 async def detect_language(
     text: str = Query(..., description="Текст для определения языка")
@@ -386,10 +367,10 @@ async def detect_language(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Text cannot be empty"
         )
-    
+
     detected_language = i18n_manager.detect_language(text)
     locale_info = i18n_manager.get_locale_info(detected_language)
-    
+
     return {
         "text": text,
         "detected_language": detected_language,
@@ -397,7 +378,6 @@ async def detect_language(
         "locale_info": locale_info,
         "is_rtl": is_rtl(detected_language)
     }
-
 
 @router.get("/format/currency")
 async def format_currency_amount(
@@ -411,19 +391,19 @@ async def format_currency_amount(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Unsupported currency: {currency}"
         )
-    
+
     if locale not in i18n_manager.supported_locales:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Unsupported locale"
         )
-    
+
     formatted_amount = currency_service.format_currency(
         currency_service.convert_currency(amount, currency, currency) or amount,
         currency,
         locale
     )
-    
+
     return {
         "amount": amount,
         "currency": currency,
@@ -432,7 +412,6 @@ async def format_currency_amount(
         "symbol": currency_service.get_currency_symbol(currency),
         "name": currency_service.get_currency_name(currency, locale)
     }
-
 
 @router.get("/format/datetime")
 async def format_datetime_string(
@@ -448,15 +427,15 @@ async def format_datetime_string(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid datetime format"
         )
-    
+
     if locale not in i18n_manager.supported_locales:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Unsupported locale"
         )
-    
+
     formatted_datetime = format_datetime(dt, locale, timezone)
-    
+
     return {
         "datetime": datetime_str,
         "locale": locale,
@@ -464,7 +443,6 @@ async def format_datetime_string(
         "formatted": formatted_datetime,
         "is_rtl": is_rtl(locale)
     }
-
 
 @router.get("/rtl-languages")
 async def get_rtl_languages():
@@ -477,19 +455,18 @@ async def get_rtl_languages():
         }
         for lang in i18n_manager.rtl_languages
     ]
-    
+
     return {
         "rtl_languages": rtl_languages,
         "total": len(rtl_languages)
     }
-
 
 @router.get("/country-settings/{country_code}")
 async def get_country_settings(country_code: str):
     """Получить настройки для страны"""
     timezone = timezone_service.get_timezone_by_country(country_code)
     currency = currency_service.get_currency_by_country(country_code)
-    
+
     return {
         "country_code": country_code,
         "timezone": timezone,
@@ -497,7 +474,6 @@ async def get_country_settings(country_code: str):
         "locale": f"en-{country_code.lower()}",  # Заглушка
         "is_rtl": False  # Заглушка
     }
-
 
 @router.get("/locale-settings/{locale}")
 async def get_locale_settings(locale: str):
@@ -507,11 +483,11 @@ async def get_locale_settings(locale: str):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Locale not found"
         )
-    
+
     timezone = timezone_service.get_timezone_by_locale(locale)
     currency = currency_service.get_currency_by_locale(locale)
     locale_info = i18n_manager.get_locale_info(locale)
-    
+
     return {
         "locale": locale,
         "timezone": timezone,
@@ -521,5 +497,3 @@ async def get_locale_settings(locale: str):
         "territory": locale_info["territory"],
         "display_name": locale_info["name"]
     }
-
-
