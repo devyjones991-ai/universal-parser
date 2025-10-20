@@ -1,0 +1,40 @@
+@import '../design/web.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-surface-border;
+  }
+  
+  body {
+    @apply bg-surface-bg text-text-primary font-sans;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center gap-2 px-3 py-2 rounded-sm border border-transparent font-medium transition-colors;
+  }
+  
+  .btn-primary {
+    @apply bg-brand-primary text-white hover:bg-blue-600;
+  }
+  
+  .btn-secondary {
+    @apply bg-brand-secondary text-white hover:bg-indigo-600;
+  }
+  
+  .btn-outline {
+    @apply bg-transparent border-surface-border text-text-primary hover:bg-surface-card;
+  }
+  
+  .card {
+    @apply bg-surface-card border border-surface-border rounded-md p-4 shadow-md;
+  }
+  
+  .input {
+    @apply w-full px-3 py-2 bg-surface-card border border-surface-border rounded-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-brand-primary;
+  }
+}

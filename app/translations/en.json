@@ -1,5 +1,18 @@
 {
   "app": {
+    "name": "Universal Parser"
+  },
+  "ui": {
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete"
+    }
+  }
+}
+
+{
+  "app": {
     "name": "Universal Parser",
     "description": "Comprehensive marketplace monitoring platform"
   },

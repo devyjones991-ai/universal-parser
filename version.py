@@ -33,7 +33,7 @@ def update_version(new_version):
         content = re.sub(r'__version__ = "[^"]*"', f'__version__ = "{new_version}"', content)
         init_file.write_text(content)
     
-    print(f"✅ Версия обновлена до {new_version}")
+    print(f"Version updated to {new_version}")
 
 def bump_version(version_type):
     """Увеличить версию"""

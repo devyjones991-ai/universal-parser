@@ -67,7 +67,11 @@ app.add_middleware(
 # Add trusted host middleware
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=["*"]  # Configure properly for production
+    allowed_hosts=[
+        "leadharvester.duckdns.org",
+        "localhost",
+        "127.0.0.1"
+    ]
 )
 
 
